@@ -1,0 +1,116 @@
+/* ══════════════════════════════════════════════════════════════
+   TailorHub – Design Tokens (Warm Tailoring Light Theme)
+   Premium, human-crafted aesthetic with warm ivory/linen base
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #2C3E7B;          /* Tailor Indigo – trust, craft */
+  --color-primary-light: #4A5FA0;
+  --color-primary-dark: #1B2A5C;
+  --color-primary-50: #EEF1F8;
+  --color-primary-100: #D4DAF0;
+
+  --color-accent: #D4A853;           /* Tape Gold – warmth, premium */
+  --color-accent-light: #E8C97A;
+  --color-accent-dark: #B8903A;
+
+  --color-success: #2E7D5B;          /* Forest Green */
+  --color-success-light: #E8F5EE;
+  --color-warning: #E8913A;          /* Warm Amber */
+  --color-warning-light: #FFF4E6;
+  --color-danger: #C0392B;           /* Rich Red */
+  --color-danger-light: #FDEDEB;
+  --color-info: #2980B9;
+
+  /* ── Neutrals (Warm Ivory/Linen Scale) ── */
+  --color-bg-primary: #FAFAF7;       /* Warm ivory page */
+  --color-bg-secondary: #F5F3EE;     /* Linen card background */
+  --color-bg-tertiary: #EDEADE;
+  --color-bg-white: #FFFFFF;
+  --color-bg-sidebar: #FFFFFF;
+  --color-bg-hover: #F0EDE5;
+  --color-bg-active: #EEF1F8;
+
+  --color-border: #E0DDD4;
+  --color-border-light: #EBE8E0;
+  --color-border-focus: #2C3E7B;
+
+  --color-text-primary: #1A1A2E;
+  --color-text-secondary: #4A4A5A;
+  --color-text-muted: #8A8A9A;
+  --color-text-inverse: #FFFFFF;
+
+  /* ── Typography ── */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-display: 'Outfit', 'Inter', sans-serif;
+
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.8125rem;  /* 13px */
+  --font-size-base: 0.875rem; /* 14px */
+  --font-size-md: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-hero: 3.25rem;  /* 52px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+
+  /* ── Borders & Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs: 0 1px 2px rgba(26, 26, 46, 0.04);
+  --shadow-sm: 0 1px 3px rgba(26, 26, 46, 0.06), 0 1px 2px rgba(26, 26, 46, 0.04);
+  --shadow-md: 0 4px 6px rgba(26, 26, 46, 0.05), 0 2px 4px rgba(26, 26, 46, 0.03);
+  --shadow-lg: 0 10px 25px rgba(26, 26, 46, 0.08), 0 4px 10px rgba(26, 26, 46, 0.04);
+  --shadow-xl: 0 20px 40px rgba(26, 26, 46, 0.1), 0 8px 16px rgba(26, 26, 46, 0.05);
+  --shadow-glow: 0 0 20px rgba(44, 62, 123, 0.15);
+  --shadow-gold: 0 4px 15px rgba(212, 168, 83, 0.2);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ── Layout ── */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+  --header-height: 64px;
+  --max-content-width: 1200px;
+
+  /* ── Z-Index Scale ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}

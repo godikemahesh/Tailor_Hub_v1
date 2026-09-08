@@ -1,0 +1,240 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TailorHub Core API",
+    "version": "1.0.0",
+    "description": "FastAPI REST API specification for TailorHub digital tailoring platform"
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register customer or tailor account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "full_name", "phone_number", "role"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "full_name": { "type": "string" },
+                  "phone_number": { "type": "string" },
+                  "role": { "type": "string", "enum": ["customer", "tailor"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Account created successfully with access token" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Email and password login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Returns JWT access token and user profile" }
+        }
+      }
+    },
+    "/api/measurements": {
+      "get": {
+        "summary": "List all saved member measurement profiles for authenticated user",
+        "responses": {
+          "200": { "description": "Array of member measurement profiles (Self, Dad, Mom, etc.)" }
+        }
+      },
+      "post": {
+        "summary": "Create a new member measurement profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["member_name", "relationship_tag", "gender_category", "garment_type", "measurements"],
+                "properties": {
+                  "member_name": { "type": "string", "example": "Dad" },
+                  "relationship_tag": { "type": "string", "example": "father" },
+                  "gender_category": { "type": "string", "enum": ["women", "men", "kids", "unisex"] },
+                  "garment_type": { "type": "string", "example": "shirt" },
+                  "measurements": { "type": "object" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Measurement profile created" }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "summary": "List orders (filtered by customer_id or tailor_id from JWT)",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Array of orders" }
+        }
+      },
+      "post": {
+        "summary": "Create new stitching order",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tailor_id", "member_name", "garment_type", "measurement_profile_id", "promised_date"],
+                "properties": {
+                  "tailor_id": { "type": "string", "format": "uuid" },
+                  "member_name": { "type": "string" },
+                  "garment_type": { "type": "string" },
+                  "measurement_profile_id": { "type": "string", "format": "uuid" },
+                  "promised_date": { "type": "string", "format": "date" },
+                  "is_express": { "type": "boolean" },
+                  "cloth_received_notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order created with order number" }
+        }
+      }
+    },
+    "/api/orders/{id}/status": {
+      "patch": {
+        "summary": "Update order status (Tailor only: received -> cutting -> stitching -> trial_ready -> delivered)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["received", "cutting", "stitching", "trial_ready", "delivered", "cancelled"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order status updated and customer notification dispatched" }
+        }
+      }
+    },
+    "/api/orders/{id}/spec-sheet": {
+      "get": {
+        "summary": "Get visual specification blueprint for an order",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Visual spec sheet details with SVG blueprint and internal margin specs" }
+        }
+      },
+      "post": {
+        "summary": "Save or lock visual specification blueprint",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "front_neck_style": { "type": "string" },
+                  "back_neck_style": { "type": "string" },
+                  "sleeve_style": { "type": "string" },
+                  "lining_type": { "type": "string" },
+                  "pads_type": { "type": "string" },
+                  "internal_margin_inches": { "type": "number" },
+                  "tassels_latkans": { "type": "boolean" },
+                  "dori_fasteners": { "type": "boolean" },
+                  "special_instructions": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Blueprint locked and Job Card generated" }
+        }
+      }
+    },
+    "/api/ocr/upload-page": {
+      "post": {
+        "summary": "Upload photograph of handwritten register page for OpenCV + OCR processing",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Extracted candidate customer records for human verification" }
+        }
+      }
+    },
+    "/api/telephony/outbound-call": {
+      "post": {
+        "summary": "Initiate automated outbound voice call to customer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["order_id", "call_type", "language"],
+                "properties": {
+                  "order_id": { "type": "string", "format": "uuid" },
+                  "call_type": { "type": "string", "enum": ["trial_ready", "delivery_ready"] },
+                  "language": { "type": "string", "enum": ["en", "te", "hi"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Call queued or triggered on pluggable simulator/telephony gateway" }
+        }
+      }
+    }
+  }
+}
