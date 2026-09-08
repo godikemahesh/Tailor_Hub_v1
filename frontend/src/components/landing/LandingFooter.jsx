@@ -45,21 +45,22 @@ export default function LandingFooter() {
             <div className="footer-col-title">Capabilities</div>
             <ul className="footer-links-list">
               <li><a href="#features">Hands-Free Voice Tape</a></li>
-              <li><a href="#features">Anti-Dispute Spec Sheet</a></li>
-              <li><a href="#features">Old Book OCR Scanner</a></li>
-              <li><a href="#features">5-Stage Order Progress</a></li>
-              <li><a href="#features">Multi-Member Family Profiles</a></li>
+              <li><a href="#features">Anti-Dispute Spec Sheets</a></li>
+              <li><a href="#features">Physical Ledger Scanner</a></li>
+              <li><a href="#features">Automated Trial Voice Calls</a></li>
+              <li><a href="#features">Multi-Member Family Vault</a></li>
+              <li><a href="#features">5-Stage Atelier Workshop OS</a></li>
             </ul>
           </div>
 
           <div>
             <div className="footer-col-title">Studio OS</div>
             <ul className="footer-links-list">
-              <li><Link to="/app">Tailor Dashboard</Link></li>
-              <li><Link to="/app">Customer Portal</Link></li>
-              <li><Link to="/app">Live Order Tracker</Link></li>
-              <li><Link to="/app">Cutting Job Cards</Link></li>
-              <li><Link to="/app">Capacity Balancer</Link></li>
+              <li><Link to="/tailor">Tailor Workshop Atelier</Link></li>
+              <li><Link to="/customer">Customer Fit Vault</Link></li>
+              <li><Link to="/records">Measurement Ledger</Link></li>
+              <li><Link to="/spec-sheet">2D Cutting Blueprints</Link></li>
+              <li><Link to="/tailors">Master Tailors Directory</Link></li>
             </ul>
           </div>
 

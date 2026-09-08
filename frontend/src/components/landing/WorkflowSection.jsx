@@ -18,8 +18,8 @@ export default function WorkflowSection() {
     {
       number: '03',
       icon: Truck,
-      title: 'Advance 5 Stages & Live Customer Sync',
-      desc: 'Move garments smoothly through Received, Cutting, Stitching, Trial Ready, and Delivered. Clients see live progress updates with zero anxious phone calls.'
+      title: 'Advance 5 Stages & Auto Trial Phone Calls',
+      desc: 'Move garments through Received, Cutting, Stitching, Trial Ready, and Delivered. The moment status hits Trial Ready, an automated voice call alerts the customer to visit for fitting.'
     }
   ];
 

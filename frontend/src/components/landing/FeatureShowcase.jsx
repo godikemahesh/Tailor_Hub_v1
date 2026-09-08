@@ -11,84 +11,120 @@ import {
   ArrowRight,
   ShieldAlert,
   Sliders,
-  Volume2
+  Volume2,
+  PhoneCall,
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
   {
     id: 'voice-tape',
-    title: 'Hands-Free "Voice Tape" Assistant',
-    tag: 'Audio AI • Zero Typing',
+    title: 'Hands-Free Voice Tape Intake',
+    tabLabel: 'Voice Tape',
+    tag: 'Audio Intake • Zero Typing',
     icon: Mic,
     headline: 'Keep both hands on the measuring tape and cloth.',
-    desc: 'Speak customer measurements naturally in English or Hindi mix. The on-device speech engine automatically detects numbers, handles fractions ("14 and half" → 14.5), and populates intake cards hands-free.',
+    desc: 'Speak customer measurements naturally as you hold the tape. The intelligent on-device speech engine automatically detects numbers, parses fractions ("14 and a half" → 14.5), and instantly auto-fills digital measurement cards with clear audio confirmation.',
     benefits: [
-      'Complete 10-point measurement card in under 45 seconds',
-      'Runs locally in browser via Web Speech API — zero server audio latency',
-      'Visual audio wave pulse and field advance tone confirmation',
-      'One-tap manual override if client clarifies a number'
+      'Complete a 10-point custom measurement card in under 45 seconds',
+      'Real-time hands-free auto-fill with audio feedback confirmation',
+      'Intelligent echo filtering that ignores ambient shop chatter',
+      '1-tap manual adjustment if a customer requests a looser or tighter fit'
     ],
+    route: '/records',
+    actionText: 'Try Voice Tape in Studio',
     visualType: 'voice'
   },
   {
     id: 'spec-sheet',
-    title: 'Visual "Anti-Dispute" Blueprint',
-    tag: 'Dispute Prevention • 2D SVG',
+    title: 'Anti-Dispute 2D Visual Spec Sheet',
+    tabLabel: 'Visual Specs',
+    tag: 'Dispute Prevention • 2D Parametric',
     icon: FileCheck2,
     headline: 'Eliminate "This isn\'t what I told you" forever.',
-    desc: 'Select modular visual options like Sweetheart Front Neck, Deep U with Dori, and Puff Sleeves. Lock 2.5-inch inner seam margins into an indisputable digital job card with printable cutting blueprint.',
+    desc: 'Select modular visual styles like Sweetheart Front Neck, Deep U with Dori, and Puff Sleeves. Lock 2.5-inch inner seam margins into an indisputable digital job card with a 1-click printable cutting blueprint with QR tracking.',
     benefits: [
-      'Real-time 2D parametric vector preview of garment anatomy',
-      'Interactive inner seam margin slider (1.0" to 3.0" allowance)',
-      '1-Click printable PDF "Cutting Job Card" with QR tracking',
+      'Real-time 2D parametric vector preview of garment anatomy & necklines',
+      'Interactive inner seam margin slider (1.0" to 3.0" alteration allowance)',
+      '1-Click printable PDF "Cutting Job Card" with QR code tracking',
       'Both tailor & client sign off digitally before scissors touch fabric'
     ],
+    route: '/spec-sheet',
+    actionText: 'Design 2D Spec Blueprint',
     visualType: 'blueprint'
   },
   {
     id: 'ocr-scanner',
-    title: 'AI/OCR Old Book Digitization',
-    tag: 'Legacy Migration • Computer Vision',
+    title: 'Physical Register & Notebook Scanner',
+    tabLabel: 'Book Scanner',
+    tag: 'Legacy Migration • Smart OCR',
     icon: BookOpen,
     headline: 'Digitize decades of paper registers in seconds.',
-    desc: 'Snap a photo of your handwritten ledger. Our computer vision pipeline applies deskewing, Otsu binarization, and character recognition with a human-in-the-loop split-screen verification interface.',
+    desc: 'Snap a photo of your handwritten tailor register or measurement diary. The vision pipeline applies contrast correction, deskewing, and smart character recognition with a human-in-the-loop side-by-side verification interface.',
     benefits: [
-      'Automatic bounding box extraction of phone numbers and measurements',
+      'Automatic extraction of customer names, phone numbers, and measurements',
       'Side-by-side verification: original photo crop on left, editable inputs on right',
       'Instantly imports legacy customer records into searchable cloud profiles',
-      'Never lose a past client’s measurements when paper books degrade'
+      'Never lose a past client’s measurements when physical books wear out'
     ],
+    route: '/records',
+    actionText: 'Scan Physical Register',
     visualType: 'ocr'
   },
   {
+    id: 'telephony-calls',
+    title: 'Automated Trial Voice Call Alerts',
+    tabLabel: 'Auto Phone Calls',
+    tag: 'Customer Experience • Voice Dispatch',
+    icon: PhoneCall,
+    headline: 'Zero missed trials. Automated voice calls to customers.',
+    desc: 'When a garment reaches the "Trial Ready" stage on your cutting table, TailorHub automatically triggers a personalized voice phone call to the customer in their preferred language, confirming their outfit is ready for trial fitting.',
+    benefits: [
+      'Automatic voice call dispatched immediately when order status hits Trial Ready',
+      'Speaks the customer’s name, garment type, and atelier studio location',
+      'Eliminates unread text messages, delayed pickups, and workshop rack clutter',
+      'Real-time call dispatch log with call status and confirmation timestamps'
+    ],
+    route: '/tailor',
+    actionText: 'Explore Order OS & Calls',
+    visualType: 'telephony'
+  },
+  {
     id: 'multi-member',
-    title: 'Multi-Member Family Profiles',
-    tag: 'Customer Experience • Family Vault',
+    title: 'Multi-Member Family Wardrobe Vault',
+    tabLabel: 'Family Vault',
+    tag: 'Client Portal • Multi-Member',
     icon: Users,
     headline: 'One account, every family member’s bespoke sizes.',
-    desc: 'Customers can save separate profiles for Self, Mom, Dad, and Kids with universal garment types (Blouse, Kurta, Formal Shirt, Trouser, Suit). Book any stitch with 1-click profile selection.',
+    desc: 'Customers can save separate profiles for Self, Mom, Dad, and Kids with universal garment types (Blouse, Kurta, Formal Shirt, Trouser, Suit). Book any stitch with 1-click profile selection without re-measuring.',
     benefits: [
-      'Saved measurement profiles with universal fit tolerances',
-      'Relationship tags ([Self], [Dad], [Mom], [Aarav]) for frictionless booking',
-      'Fabric delivery options: doorstep pickup or studio drop-off',
-      'Shared tailoring history and past fit adjustments'
+      'Saved measurement profiles with universal fit tolerances for the entire household',
+      'Relationship tags ([Self], [Dad], [Mom], [Aarav]) for frictionless repeat bookings',
+      'Flexible fabric logistics: doorstep fabric pickup or direct studio drop-off',
+      'Complete personal tailoring archive with past orders and fit notes'
     ],
+    route: '/customer',
+    actionText: 'Open Customer Wardrobe',
     visualType: 'family'
   },
   {
     id: 'order-os',
     title: '5-Stage Order OS & Capacity Balancer',
+    tabLabel: 'Atelier OS',
     tag: 'Shop Operations • Workload Balancing',
     icon: Layers,
     headline: 'Full transparency from cutting table to trial mirror.',
     desc: 'Track every garment across 5 distinct stages: Received, Cutting, Stitching, Trial Ready, and Delivered. Dynamic capacity planning prevents overbooking during festival rushes.',
     benefits: [
       'Live status sync between Tailor Workshop and Customer Tracker',
-      'Daily workload slot limiter (e.g. max 20 active garments)',
+      'Daily workload slot limiter (e.g. 14/20 active garments) to prevent overbooking',
       'Automated trial-ready notifications with pick-up reminders',
-      'Financial overview: deposits, balance due, and monthly revenue'
+      'Financial overview: advance deposits, balance due, and daily stitching revenue'
     ],
+    route: '/tailor',
+    actionText: 'Launch Tailor Atelier OS',
     visualType: 'timeline'
   }
 ];
@@ -125,7 +161,7 @@ export default function FeatureShowcase() {
               onClick={() => setActiveTab(feat.id)}
             >
               <Icon size={16} />
-              <span>{feat.title.split(' ')[0]} {feat.title.split(' ')[1]}</span>
+              <span>{feat.tabLabel}</span>
             </button>
           );
         })}
@@ -149,8 +185,8 @@ export default function FeatureShowcase() {
           </ul>
 
           <div>
-            <Link to="/app" className="btn-hero-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}>
-              <span>Try {currentFeature.title.split(' ')[0]} in Studio App</span>
+            <Link to={currentFeature.route} className="btn-hero-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem' }}>
+              <span>{currentFeature.actionText}</span>
               <ArrowRight size={16} />
             </Link>
           </div>
@@ -204,7 +240,7 @@ export default function FeatureShowcase() {
               </div>
 
               <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b' }}>
-                Simulated Web Speech API listening stream (zero cloud latency)
+                Instant auto-filling measurement card with audio cue confirmation
               </div>
             </div>
           )}
@@ -259,7 +295,7 @@ export default function FeatureShowcase() {
                   <div>Adv: 500 Paid</div>
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#8c7b64', marginTop: '6px' }}>
-                  Otsu Binarized & Deskewed
+                  High-Contrast Binarized & Deskewed
                 </div>
               </div>
 
@@ -279,9 +315,79 @@ export default function FeatureShowcase() {
                     <strong>Chest:</strong> 36" • <strong>Waist:</strong> 30"
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#22c55e', marginTop: '4px', fontWeight: 600 }}>
-                    ✓ 100% HITL Verified
+                    ✓ 100% Verified into Ledger
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {currentFeature.visualType === 'telephony' && (
+            <div style={{ 
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(13,17,26,0.95) 100%)', 
+              border: '1px solid rgba(34,197,94,0.3)', 
+              borderRadius: '12px', 
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    borderRadius: '50%', 
+                    background: '#22c55e', 
+                    color: '#07090e',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }}>
+                    <PhoneCall size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc' }}>
+                      Automated Voice Call Dispatched
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#4ade80' }}>
+                      ● Connected • Stage: Trial Ready
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: '9999px', background: 'rgba(34,197,94,0.2)', color: '#4ade80', fontWeight: 600 }}>
+                  0:18 Active
+                </span>
+              </div>
+
+              {/* Call Target Card */}
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Target Customer:</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ffd978' }}>
+                  Ananya Sen • +91 98765 43210
+                </div>
+                <div style={{ fontSize: '0.72rem', color: '#cbd5e1', marginTop: '2px' }}>
+                  Order #TH-8842 (Bridal Silk Blouse)
+                </div>
+              </div>
+
+              {/* Spoken Telephony Script Simulation */}
+              <div style={{ 
+                background: '#0a0e17', 
+                borderRadius: '8px', 
+                padding: '10px 12px', 
+                fontSize: '0.75rem', 
+                lineHeight: '1.5', 
+                color: '#e2e8f0', 
+                borderLeft: '3px solid #22c55e',
+                fontStyle: 'italic'
+              }}>
+                "Namaskaram Ananya garu! Your Bridal Silk Blouse is completed and ready for trial fitting at Royal Stitch Studio. Please visit us at your earliest convenience!"
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', color: '#22c55e', fontWeight: 600 }}>
+                <span>✓ Customer Alerted Automatically</span>
+                <span>✓ Zero Fitting Delay</span>
               </div>
             </div>
           )}
@@ -317,9 +423,9 @@ export default function FeatureShowcase() {
                       borderRadius: '50%', 
                       background: member.active ? '#e6af2e' : '#334155',
                       color: member.active ? '#07090e' : '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
                       fontSize: '0.75rem',
                       fontWeight: 700
                     }}>
@@ -352,14 +458,14 @@ export default function FeatureShowcase() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#e6af2e' }}>Workshop Status Flow</span>
-                <span style={{ fontSize: '0.72rem', color: '#22c55e', fontWeight: 600 }}>WhatsApp Alert Sent ✓</span>
+                <span style={{ fontSize: '0.72rem', color: '#22c55e', fontWeight: 600 }}>Capacity: 14/20 Active ✓</span>
               </div>
 
               {[
                 { step: '1. Order Received & Spec Locked', status: 'Completed', time: 'Yesterday, 10:30 AM', done: true },
                 { step: '2. Pattern & Fabric Cutting', status: 'Completed', time: 'Yesterday, 4:15 PM', done: true },
                 { step: '3. Master Stitching & Seam Margin', status: 'In Progress (Active)', time: 'Today, On Table', current: true },
-                { step: '4. Trial Fitting & Quality Check', status: 'Scheduled', time: 'Tomorrow, 3:00 PM', done: false },
+                { step: '4. Trial Fitting & Automated Call', status: 'Ready to Dispatch', time: 'Tomorrow, 3:00 PM', done: false },
                 { step: '5. Handover & Delivery', status: 'Pending', time: 'Saturday', done: false },
               ].map((stage, idx) => (
                 <div 
@@ -381,9 +487,9 @@ export default function FeatureShowcase() {
                       borderRadius: '50%', 
                       background: stage.done ? '#22c55e' : (stage.current ? '#e6af2e' : '#334155'),
                       color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
                       fontSize: '0.65rem'
                     }}>
                       {stage.done ? '✓' : idx + 1}
