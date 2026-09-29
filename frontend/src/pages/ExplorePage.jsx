@@ -291,11 +291,11 @@ export default function ExplorePage() {
 
     const created = store.createPost({
       tailor_id: user?.id || 'tailor-1',
-      tailor_name: user?.full_name || 'Master Rajesh Kumar',
-      shop_name: user?.shop_name || 'Royal Stitch Studio',
+      tailor_name: user?.full_name || 'Master Tailor',
+      shop_name: user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier'),
       avatar_url: user?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
       distance_km: 1.4,
-      city: user?.city || 'Chennai',
+      city: user?.city || 'Bengaluru',
       title: newTitle,
       garment_category: newCategory,
       description: newDescription,

@@ -15,6 +15,15 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:password@localhost:5432/tailorhub"
 )
 
+# Normalize PostgreSQL driver for async SQLAlchemy (Render / Supabase defaults)
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if "sslmode=" in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace("sslmode=", "ssl=")
+
 # Detect placeholder Supabase credentials
 IS_PLACEHOLDER_DB = "your-project" in DATABASE_URL or "placeholder" in DATABASE_URL
 

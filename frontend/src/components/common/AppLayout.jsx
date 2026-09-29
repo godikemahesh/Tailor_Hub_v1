@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React from 'react';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -8,8 +8,17 @@ import '../../styles/layout.css';
 import '../../styles/dashboard.css';
 
 export default function AppLayout() {
-  const { user } = useAuth();
+  const { user, token, loading } = useAuth();
   
+  if (loading) {
+    return null;
+  }
+
+  // Enforce authentication: redirect to login if no active user session
+  if (!token && !user) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Strict role enforcement from user session
   const currentRole = user?.role || localStorage.getItem('tailorhub_active_role') || 'customer';
 

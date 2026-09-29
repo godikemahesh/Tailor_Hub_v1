@@ -13,81 +13,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
-
-const ALL_ORDERS = [
-  {
-    id: 'TH-8842',
-    client: 'Ananya Sen',
-    phone: '+91 98765 43210',
-    garment: 'Raw Silk Crimson Bridal Blouse',
-    specs: 'Sweetheart Neck • Puff Sleeve • 2.5" Margin • Cotton Lining',
-    stage: 'stitching',
-    dueDate: 'Tomorrow, 5 PM',
-    amount: '₹ 2,400',
-    advance: '₹ 1,000',
-    urgent: true
-  },
-  {
-    id: 'TH-8841',
-    client: 'Ramesh Patel',
-    phone: '+91 98234 56789',
-    garment: 'Linen Formal Shirt & Trouser Set',
-    specs: 'Cutaway Collar • Slim Fit • 2" Cuff • Coin Pocket',
-    stage: 'cutting',
-    dueDate: 'Sep 9',
-    amount: '₹ 3,200',
-    advance: '₹ 1,500',
-    urgent: false
-  },
-  {
-    id: 'TH-8840',
-    client: 'Sunita Verma',
-    phone: '+91 97112 34567',
-    garment: 'Anarkali Suit Set with Dupatta',
-    specs: 'Churidar • Boat Neck • Cotton Lining • Gold Piping',
-    stage: 'trial_ready',
-    dueDate: 'Today, 6 PM',
-    amount: '₹ 4,500',
-    advance: '₹ 2,000',
-    urgent: true
-  },
-  {
-    id: 'TH-8839',
-    client: 'Vikram Malhotra',
-    phone: '+91 99887 76655',
-    garment: 'Bandhgala Jodhpuri Royal Suit',
-    specs: 'Hand Stitched Lapel • Canvas Interlining • Brass Buttons',
-    stage: 'received',
-    dueDate: 'Sep 14',
-    amount: '₹ 8,500',
-    advance: '₹ 3,000',
-    urgent: false
-  },
-  {
-    id: 'TH-8838',
-    client: 'Kavita Joshi',
-    phone: '+91 94567 12345',
-    garment: 'Silk Banarasi Blouse',
-    specs: 'Deep U Back • Latkan Dori • Padded Cups',
-    stage: 'delivered',
-    dueDate: 'Delivered',
-    amount: '₹ 1,800',
-    advance: '₹ 1,800',
-    urgent: false
-  },
-  {
-    id: 'TH-8837',
-    client: 'Meera Nair',
-    phone: '+91 91234 87654',
-    garment: 'Kalamkari Kurti with Palazzo',
-    specs: 'Round Slit Neck • 3/4 Sleeves • Pockets Both Sides',
-    stage: 'stitching',
-    dueDate: 'Sep 11',
-    amount: '₹ 2,100',
-    advance: '₹ 1,000',
-    urgent: false
-  }
-];
+import { useAuth } from '../context/AuthContext';
 
 const STAGES = [
   { key: 'all', label: 'All Orders' },
@@ -99,14 +25,15 @@ const STAGES = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(ALL_ORDERS);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
   const [selectedStage, setSelectedStage] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeOrderModal, setActiveOrderModal] = useState(null);
 
   useEffect(() => {
     try {
-      const storeOrders = store.getOrders();
+      const storeOrders = store.getOrders(user?.role || 'all', user);
       if (storeOrders && storeOrders.length > 0) {
         const formatted = storeOrders.map(o => ({
           id: o.order_number || o.id,
@@ -125,11 +52,14 @@ export default function OrdersPage() {
           rawOrder: o
         }));
         setOrders(formatted);
+      } else {
+        setOrders([]);
       }
     } catch (e) {
       console.error(e);
+      setOrders([]);
     }
-  }, []);
+  }, [user]);
 
   const advanceStage = (id) => {
     const seq = ['received', 'cutting', 'stitching', 'trial_ready', 'delivered'];
@@ -283,6 +213,19 @@ export default function OrdersPage() {
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                    <Scissors size={32} color="#94a3b8" />
+                    <span style={{ fontWeight: 600, fontSize: '1rem', color: '#334155' }}>No Orders in Queue</span>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                      {searchQuery ? 'No orders match your filter.' : 'When clients place custom stitching orders with your atelier, they will appear here.'}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

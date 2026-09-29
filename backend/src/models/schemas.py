@@ -52,11 +52,21 @@ class CallStatus(str, Enum):
 # ── Auth Schemas ──
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
-    full_name: str = Field(min_length=2, max_length=150)
-    phone_number: str = Field(min_length=10, max_length=20)
+    password: str = Field(min_length=4)
+    full_name: str = Field(min_length=1, max_length=150)
+    phone_number: Optional[str] = Field(default="+91 98765 43210")
     role: UserRole
     preferred_language: str = "en"
+    shop_name: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    pincode: Optional[str] = None
+    experience_years: Optional[str] = None
+    specialization: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+class RoleUpdateRequest(BaseModel):
+    role: UserRole
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -75,6 +85,12 @@ class UserResponse(BaseModel):
     phone_number: str
     preferred_language: str
     avatar_url: Optional[str] = None
+    shop_name: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    pincode: Optional[str] = None
+    experience_years: Optional[str] = None
+    specialization: Optional[str] = None
     created_at: datetime
 
     class Config:

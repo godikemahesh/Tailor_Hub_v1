@@ -39,35 +39,7 @@ def generate_order_number() -> str:
     return f"TH-{year}-{suffix}"
 
 
-DEFAULT_ORDERS_FALLBACK = [
-    {
-        "id": "33333333-3333-3333-3333-333333333333",
-        "order_number": "TH-2026-8842",
-        "customer_id": "11111111-1111-1111-1111-111111111111",
-        "tailor_id": "22222222-2222-2222-2222-222222222222",
-        "member_name": "Self",
-        "garment_type": "Silk Bridal Blouse",
-        "measurements_snapshot": {
-            "bust_chest": 36.0,
-            "waist": 30.0,
-            "full_length": 14.0,
-            "shoulder_width": 14.5
-        },
-        "status": "stitching",
-        "promised_date": "2026-09-12",
-        "is_express": True,
-        "base_price": 2400.0,
-        "express_fee": 0.0,
-        "total_price": 2400.0,
-        "advance_paid": 1000.0,
-        "balance_due": 1400.0,
-        "cloth_received_notes": "Crimson Raw Silk",
-        "customer_notes": "Sweetheart neck with 2.5 inch safe margin",
-        "measurement_profile_id": None,
-        "created_at": "2026-09-05T10:30:00",
-        "updated_at": "2026-09-05T10:30:00"
-    }
-]
+DEFAULT_ORDERS_FALLBACK = []
 
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)

@@ -36,7 +36,7 @@ export default function LandingHero() {
 
       {/* CTA Buttons */}
       <div className="hero-cta-group">
-        <Link to="/app" className="btn-hero-primary">
+        <Link to="/login" className="btn-hero-primary">
           <span>Launch Atelier Platform</span>
           <ArrowRight size={18} />
         </Link>
@@ -197,7 +197,7 @@ export default function LandingHero() {
                 <div style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>Sweetheart Neck & Inner Margin Verified</div>
               </div>
 
-              <Link to="/app" style={{ 
+              <Link to="/login" style={{ 
                 marginTop: 'auto', 
                 background: 'rgba(230,175,46,0.15)', 
                 border: '1px solid rgba(230,175,46,0.3)', 

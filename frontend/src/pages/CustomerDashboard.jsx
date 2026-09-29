@@ -86,24 +86,13 @@ export default function CustomerDashboard() {
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
-    setOrders(store.getOrders('customer'));
-  }, []);
+    setOrders(store.getOrders('customer', user));
+  }, [user]);
 
   const STAGE_NAMES = ['Received', 'Cutting', 'Stitching', 'Trial Ready', 'Delivered'];
   const STAGE_KEYS = ['received', 'cutting', 'stitching', 'trial_ready', 'delivered'];
 
-  const displayOrders = orders && orders.length > 0 ? orders : [
-    {
-      id: 'TH-8842',
-      member: `${fullName} (Self)`,
-      garment: 'Raw Silk Bespoke Outfit',
-      tailorShop: 'Royal Stitch Studio',
-      stageIndex: 2, // Stitching
-      stages: ['Received', 'Cutting', 'Stitching', 'Trial Ready', 'Delivered'],
-      estimatedDelivery: 'Tomorrow, 5:00 PM',
-      specNotes: 'Tailored fit • Premium stitching • Quality inner margin'
-    }
-  ];
+  const displayOrders = orders || [];
 
   return (
     <div className="dashboard-container">
@@ -142,6 +131,25 @@ export default function CustomerDashboard() {
         <p className="section-desc">Real-time status updates directly from the master tailor's workbench.</p>
 
         <div className="orders-cards-list">
+          {displayOrders.length === 0 && (
+            <div style={{
+              background: '#fff',
+              border: '1px dashed #cbd5e1',
+              borderRadius: '12px',
+              padding: '36px 20px',
+              textAlign: 'center',
+              color: '#64748b'
+            }}>
+              <Sparkles size={28} color="#e6af2e" style={{ margin: '0 auto 8px auto', display: 'block' }} />
+              <div style={{ fontWeight: 600, color: '#334155', marginBottom: '4px' }}>No Active Stitching Orders</div>
+              <p style={{ fontSize: '0.85rem', margin: '0 0 16px 0' }}>
+                Design a custom blouse, kurta, or suit and book a master tailor to see your live order tracker here.
+              </p>
+              <Link to="/design-order" className="action-pill-btn primary" style={{ display: 'inline-flex' }}>
+                <span>Start New Bespoke Stitch</span>
+              </Link>
+            </div>
+          )}
           {displayOrders.map(order => {
             const orderId = order.order_number || order.id;
             const memberName = order.member_name || order.member || 'Self';

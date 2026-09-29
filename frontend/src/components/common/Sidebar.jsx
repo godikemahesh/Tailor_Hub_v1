@@ -24,9 +24,8 @@ import './Sidebar.css';
 const TAILOR_LINKS = [
   { to: '/tailor', icon: LayoutDashboard, label: 'Workshop Overview' },
   { to: '/explore', icon: Compass, label: 'Artisanal Showcases' },
-  { to: '/orders', icon: ShoppingBag, label: '5-Stage Order Queue', badge: '14' },
+  { to: '/orders', icon: ShoppingBag, label: '5-Stage Order Queue' },
   { to: '/spec-sheet', icon: FileText, label: 'Visual Spec Sheets' },
-  { to: '/measurements', icon: Mic, label: 'Voice Tape Intake' },
   { to: '/records', icon: BookOpen, label: 'Records' },
 ];
 
@@ -35,7 +34,7 @@ const CUSTOMER_LINKS = [
   { to: '/explore', icon: Compass, label: 'Explore Creations' },
   { to: '/design-order', icon: Sparkles, label: 'Design Custom Stitch' },
   { to: '/tailors', icon: Users, label: 'Master Tailors Directory' },
-  { to: '/orders', icon: ShoppingBag, label: 'Live Orders Tracker', badge: '2' },
+  { to: '/orders', icon: ShoppingBag, label: 'Live Orders Tracker' },
   { to: '/measurements', icon: Ruler, label: 'Family Fit Vault' },
 ];
 
@@ -46,6 +45,8 @@ export default function Sidebar({ currentRole }) {
 
   const isTailor = currentRole === 'tailor';
   const links = isTailor ? TAILOR_LINKS : CUSTOMER_LINKS;
+
+  const tailorStudioName = user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier');
 
   const handleLogout = () => {
     logout();
@@ -86,7 +87,7 @@ export default function Sidebar({ currentRole }) {
               <span>{isTailor ? 'Master Atelier Workspace' : 'Customer Bespoke Vault'}</span>
             </div>
             <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              {isTailor ? 'Royal Stitch Studio #8842' : 'Family Measurements Active'}
+              {isTailor ? tailorStudioName : 'Family Measurements Active'}
             </div>
           </div>
         </div>
@@ -145,7 +146,7 @@ export default function Sidebar({ currentRole }) {
                 {user?.full_name || (isTailor ? 'Master Tailor' : 'Valued Customer')}
               </span>
               <span className="sidebar-user-role">
-                {isTailor ? (user?.shop_name || 'Royal Stitch Studio') : 'Customer Bespoke Vault'}
+                {isTailor ? tailorStudioName : 'Customer Bespoke Vault'}
               </span>
             </div>
           </div>

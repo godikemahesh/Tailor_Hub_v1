@@ -53,22 +53,43 @@ export default function TailorDashboard() {
   const [isCalling, setIsCalling] = useState(false);
   const [overridePhone, setOverridePhone] = useState('');
 
+  // Synthesize audible voice call announcement in the browser
+  const speakVoiceAnnouncement = (text) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        const voices = window.speechSynthesis.getVoices();
+        const indianOrEn = voices.find(v => v.lang.includes('en-IN')) || voices.find(v => v.lang.startsWith('en'));
+        if (indianOrEn) utterance.voice = indianOrEn;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn('SpeechSynthesis error:', e);
+      }
+    }
+  };
+
   useEffect(() => {
-    // Load orders from central store (including any customer-created bookings!)
-    const currentOrders = store.getOrders('tailor');
+    // Load orders scoped to this tailor
+    const currentOrders = store.getOrders('tailor', user);
     setOrders(currentOrders);
-  }, []);
+  }, [user]);
 
   const handleAdvanceStage = async (orderId, e) => {
     if (e) e.stopPropagation();
     const orderBefore = orders.find(o => o.id === orderId);
+    const studioName = user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier');
     const willBeTrial = orderBefore && orderBefore.status === 'stitching';
+    const speechMessage = `Hello ${orderBefore?.customer_name || 'Client'}. This is an automated update from ${studioName}. Your bespoke ${orderBefore?.garment_type || 'outfit'}, order number ${orderBefore?.order_number || ''}, has completed precision stitching and is now ready for your trial fitting. Please visit our workshop at your earliest convenience!`;
 
     if (willBeTrial) {
       setCallToast({
         type: 'initiating',
         message: `📞 Auto-Calling Customer ${orderBefore.customer_name} (${orderBefore.customer_phone || '+91 98765 43210'}): Stitching complete, outfit ready for trial fitting!`
       });
+      speakVoiceAnnouncement(speechMessage);
     }
 
     const updated = await store.advanceOrderStatus(orderId);
@@ -84,23 +105,27 @@ export default function TailorDashboard() {
           type: 'success',
           message: `✅ Automated Call Dispatched to ${orderBefore.customer_name} (${orderBefore.customer_phone || '+91 98765 43210'})! Voice announced trial ready.`
         });
-        setTimeout(() => setCallToast(null), 6000);
+        setTimeout(() => setCallToast(null), 7000);
       }, 1500);
     }
   };
 
   const handleManualCall = async (order) => {
     setIsCalling(true);
+    const studioName = user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier');
     const phoneToUse = overridePhone.trim() || order.customer_phone || '+91 98765 43210';
     setCallToast({
       type: 'initiating',
       message: `📞 Connecting automated voice call to ${order.customer_name} (${phoneToUse})...`
     });
 
+    const speechMsg = `Hello ${order.customer_name || 'Client'}. This is an automated call from ${studioName}. Your ${order.garment_type || 'bespoke garment'}, order number ${order.order_number || ''}, is ready for your trial fitting. Thank you!`;
+    speakVoiceAnnouncement(speechMsg);
+
     const res = await store.triggerOrderCall(order.id, phoneToUse);
     setIsCalling(false);
 
-    const refreshed = store.getOrders('tailor');
+    const refreshed = store.getOrders('tailor', user);
     setOrders(refreshed);
     if (selectedOrder && selectedOrder.id === order.id) {
       setSelectedOrder(refreshed.find(o => o.id === order.id));
@@ -109,15 +134,15 @@ export default function TailorDashboard() {
     if (res?.success) {
       setCallToast({
         type: 'success',
-        message: `✅ Voice Call Placed! Calling ${phoneToUse}. Announcement: "Trial fitting is ready!"`
+        message: `✅ Voice Call Dispatched! Calling ${phoneToUse} via ${res.driver === 'twilio' ? 'Twilio Cloud' : 'Voice Dispatcher'}. Spoken: "Trial fitting is ready!"`
       });
     } else {
       setCallToast({
         type: 'notice',
-        message: `ℹ️ Automated Voice Call Triggered (${res?.error || 'Processed'}). Voice: "Your bespoke outfit is ready for trial fitting!"`
+        message: `ℹ️ Automated Voice Call Triggered (${res?.error || 'Completed'}). Voice: "Your bespoke outfit is ready for trial fitting!"`
       });
     }
-    setTimeout(() => setCallToast(null), 7000);
+    setTimeout(() => setCallToast(null), 8000);
   };
 
   const handleDownloadPDF = (order) => {
@@ -216,7 +241,7 @@ export default function TailorDashboard() {
         <div>
           <div className="atelier-badge">
             <Scissors size={14} />
-            <span>Master Atelier OS • Royal Stitch Studio</span>
+            <span>Master Atelier OS • {user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier')}</span>
           </div>
           <h1 className="atelier-title">Workshop Production Overview</h1>
           <p className="atelier-subtitle">
@@ -234,13 +259,9 @@ export default function TailorDashboard() {
             <FileText size={16} />
             <span>2D Spec Sheets</span>
           </Link>
-          <Link to="/records" className="action-pill-btn secondary">
+          <Link to="/records" className="action-pill-btn primary">
             <BookOpen size={16} />
             <span>Records</span>
-          </Link>
-          <Link to="/measurements" className="action-pill-btn primary">
-            <Mic size={16} />
-            <span>Voice Tape Intake</span>
           </Link>
         </div>
       </div>
@@ -346,7 +367,7 @@ export default function TailorDashboard() {
                   <tr 
                     key={order.id} 
                     className="clickable-order-row"
-                    onClick={() => setSelectedOrder(order)}
+                    onClick={() => { setSelectedOrder(order); setOverridePhone(order.customer_phone || ''); }}
                   >
                     <td className="job-id-cell">
                       <strong>{order.order_number || order.id}</strong>
@@ -403,7 +424,7 @@ export default function TailorDashboard() {
                           type="button" 
                           className="action-pill-btn secondary"
                           style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setOverridePhone(order.customer_phone || ''); }}
                           title="View Customer's 2D Design & Blueprint"
                         >
                           <Eye size={13} />
@@ -426,6 +447,21 @@ export default function TailorDashboard() {
                   </tr>
                 );
               })}
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <Scissors size={32} color="#94a3b8" />
+                      <span style={{ fontWeight: 600, fontSize: '1rem', color: '#334155' }}>No Customer Orders Yet</span>
+                      <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                        {stageFilter === 'all' 
+                          ? 'When customers book a bespoke stitch with your atelier, new orders will appear in this queue.' 
+                          : `No orders currently in the ${stageFilter} stage.`}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -632,6 +668,19 @@ export default function TailorDashboard() {
                   >
                     <Phone size={14} />
                     <span>{isCalling ? 'Connecting Call...' : 'Trigger Voice Call to Customer'}</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    className="action-pill-btn secondary"
+                    onClick={() => {
+                      const studioName = user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier');
+                      speakVoiceAnnouncement(`Hello ${selectedOrder.customer_name || 'Client'}. This is an automated update from ${studioName}. Your ${selectedOrder.garment_type || 'bespoke garment'} is ready for trial fitting.`);
+                    }}
+                    title="Play synthesized audio preview in browser"
+                    style={{ padding: '7px 14px', fontSize: '0.82rem' }}
+                  >
+                    <span>🔊 Test Audio Announcement</span>
                   </button>
                 </div>
 

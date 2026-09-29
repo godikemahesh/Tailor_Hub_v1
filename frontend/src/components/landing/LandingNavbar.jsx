@@ -27,7 +27,7 @@ export default function LandingNavbar() {
           <Link to="/login" className="nav-btn-ghost">
             Sign In / Portals
           </Link>
-          <Link to="/app" className="nav-btn-primary">
+          <Link to="/login" className="nav-btn-primary">
             <span>Launch Atelier App</span>
             <ArrowRight size={15} />
           </Link>

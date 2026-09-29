@@ -54,28 +54,80 @@ export default function LoginPage() {
       if (isRegisterMode) {
         const payload = {
           email: email.trim(),
-          phone_number: phone.trim() || undefined,
+          phone_number: phone.trim() || '+91 98765 43210',
           password: password,
-          full_name: fullName.trim(),
-          role: activePortal
+          full_name: fullName.trim() || (email ? email.split('@')[0] : 'User'),
+          role: activePortal,
+          ...(activePortal === 'tailor' ? {
+            shop_name: shopName.trim() || `${fullName.trim() || 'Master'}'s Atelier`,
+            experience_years: experienceYears || '5',
+            specialization: specialization || 'Bespoke Tailoring',
+            address: address.trim() || 'Main Workshop Studio',
+            city: city.trim() || 'Bengaluru',
+            pincode: pincode.trim() || '560001',
+            avatar_url: avatarUrl.trim() || ''
+          } : {})
         };
         const res = await authAPI.register(payload);
         if (res.data?.access_token) {
           localStorage.setItem('tailorhub_token', res.data.access_token);
         }
-        if (res.data?.user) {
-          localStorage.setItem('tailorhub_user', JSON.stringify(res.data.user));
+        
+        const baseUser = res.data?.user || {};
+        const userToSave = {
+          ...baseUser,
+          full_name: baseUser.full_name || fullName.trim() || (activePortal === 'tailor' ? 'Master Tailor' : 'Customer'),
+          role: activePortal,
+          ...(activePortal === 'tailor' ? {
+            shop_name: shopName.trim() || baseUser.shop_name || `${fullName.trim() || 'Master'}'s Atelier`,
+            address: address.trim() || baseUser.address || 'Main Workshop Studio',
+            city: city.trim() || baseUser.city || 'Bengaluru',
+            pincode: pincode.trim() || baseUser.pincode || '560001',
+            experience_years: experienceYears || '5',
+            specialization: specialization || 'Bespoke Tailoring'
+          } : {})
+        };
+
+        localStorage.setItem('tailorhub_user', JSON.stringify(userToSave));
+        if (activePortal === 'tailor') {
+          store.addTailor(userToSave);
+          // Clear any leftover cached mock customer records from prior sessions
+          localStorage.removeItem('tailorhub_records');
         }
       } else {
         const res = await authAPI.login({
           email: email.trim(),
           password: password
         });
+        let userData = res.data?.user;
         if (res.data?.access_token) {
           localStorage.setItem('tailorhub_token', res.data.access_token);
         }
-        if (res.data?.user) {
-          localStorage.setItem('tailorhub_user', JSON.stringify(res.data.user));
+
+        // If user logged in via Tailor portal but their DB account is customer (or vice versa), auto-sync role
+        if (userData && userData.role !== activePortal) {
+          try {
+            const updateRes = await authAPI.updateRole(activePortal);
+            if (updateRes.data) {
+              userData = updateRes.data;
+            }
+          } catch (e) {
+            console.warn('Could not auto-sync role on login:', e);
+            userData = { ...userData, role: activePortal };
+          }
+        }
+
+        if (userData && activePortal === 'tailor') {
+          if (!userData.shop_name || userData.shop_name === 'Royal Stitch Studio') {
+            const allTailors = store.getTailors();
+            const matchingTailor = allTailors.find(t => t.tailor_id === userData.id || t.id === userData.id);
+            userData.shop_name = matchingTailor?.shop_name || `${userData.full_name || 'Master'}'s Atelier`;
+            userData.address = matchingTailor?.address || userData.address || 'Workshop Studio';
+          }
+        }
+
+        if (userData) {
+          localStorage.setItem('tailorhub_user', JSON.stringify(userData));
         }
       }
 
@@ -86,37 +138,18 @@ export default function LoginPage() {
         window.location.href = '/customer';
       }
     } catch (err) {
-      console.warn('Authentication API sync notice:', err);
-      // Fallback to store real user session
-      const realUser = {
-        id: `usr-${Date.now()}`,
-        full_name: fullName.trim() || (email ? email.split('@')[0] : 'User'),
-        email: email.trim(),
-        phone_number: phone.trim() || '+91 98765 43210',
-        role: activePortal,
-        ...(activePortal === 'tailor' ? {
-          shop_name: shopName.trim() || `${fullName.trim() || 'Master'}'s Atelier`,
-          experience_years: experienceYears || '5',
-          specialization: specialization || 'Bespoke Tailoring',
-          address: address || 'Main Road',
-          city: city || 'Bengaluru',
-          pincode: pincode || '560001',
-          avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80'
-        } : {})
-      };
-
-      if (activePortal === 'tailor') {
-        store.addTailor(realUser);
+      console.error('Authentication error:', err);
+      let errorMsg = 'Authentication failed. Please verify your details.';
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          errorMsg = err.response.data.detail.map(d => `${d.loc ? d.loc.slice(-1) : ''}: ${d.msg}`).join(', ');
+        } else {
+          errorMsg = err.response.data.detail;
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
       }
-      localStorage.setItem('tailorhub_token', `auth-jwt-${Date.now()}`);
-      localStorage.setItem('tailorhub_user', JSON.stringify(realUser));
-      localStorage.setItem('tailorhub_active_role', activePortal);
-
-      if (activePortal === 'tailor') {
-        window.location.href = '/tailor';
-      } else {
-        window.location.href = '/customer';
-      }
+      setAuthError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -190,12 +223,40 @@ export default function LoginPage() {
             </span>
             <button
               type="button"
-              style={{ background: 'transparent', border: 'none', color: '#ffd978', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#ffd978',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
               onClick={() => setIsRegisterMode(!isRegisterMode)}
             >
-              {isRegisterMode ? 'Sign In Instead' : (activePortal === 'customer' ? 'Register as Customer' : 'Register as Master Tailor')}
+              {isRegisterMode 
+                ? 'Sign In Instead' 
+                : (activePortal === 'customer' ? 'Register as Customer' : 'Register as Master Tailor')}
             </button>
           </div>
+
+          {authError && (
+            <div className="auth-error-banner" style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid #ef4444',
+              color: '#fca5a5',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '0.88rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
+              <span>{authError}</span>
+            </div>
+          )}
 
           {activePortal === 'customer' ? (
             <div className="portal-content-view">
@@ -402,6 +463,21 @@ export default function LoginPage() {
                           placeholder="https://..." 
                           value={avatarUrl}
                           onChange={e => setAvatarUrl(e.target.value)}
+                          className="portal-input" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-field-group">
+                      <label>Workshop Mobile / WhatsApp Number</label>
+                      <div className="input-with-icon">
+                        <Phone size={16} className="field-icon" />
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="+91 98765 43210" 
+                          value={phone}
+                          onChange={e => setPhone(e.target.value)}
                           className="portal-input" 
                         />
                       </div>

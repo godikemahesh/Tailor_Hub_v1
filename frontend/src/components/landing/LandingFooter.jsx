@@ -14,7 +14,7 @@ export default function LandingFooter() {
             hands-free measurement intake, and zero-dispute bespoke craftsmanship.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link to="/app" className="btn-hero-primary" style={{ padding: '0.9rem 2.25rem' }}>
+            <Link to="/login" className="btn-hero-primary" style={{ padding: '0.9rem 2.25rem' }}>
               <span>Enter TailorHub Studio</span>
               <ArrowRight size={18} />
             </Link>
@@ -56,11 +56,11 @@ export default function LandingFooter() {
           <div>
             <div className="footer-col-title">Studio OS</div>
             <ul className="footer-links-list">
-              <li><Link to="/tailor">Tailor Workshop Atelier</Link></li>
-              <li><Link to="/customer">Customer Fit Vault</Link></li>
-              <li><Link to="/records">Measurement Ledger</Link></li>
-              <li><Link to="/spec-sheet">2D Cutting Blueprints</Link></li>
-              <li><Link to="/tailors">Master Tailors Directory</Link></li>
+              <li><Link to="/login">Tailor Workshop Atelier</Link></li>
+              <li><Link to="/login">Customer Fit Vault</Link></li>
+              <li><Link to="/login">Measurement Ledger</Link></li>
+              <li><Link to="/login">2D Cutting Blueprints</Link></li>
+              <li><Link to="/login">Master Tailors Directory</Link></li>
             </ul>
           </div>
 

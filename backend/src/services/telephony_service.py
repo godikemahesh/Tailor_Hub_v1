@@ -36,10 +36,10 @@ def build_voice_script(
     call_type: str = "trial_ready"
 ) -> str:
     """Generate professional personalized automated voice notification script."""
-    c_name = customer_name or "Valued Customer"
-    s_name = shop_name or "Your Master Atelier"
-    g_type = garment_type or "bespoke outfit"
-    ord_no = order_number or ""
+    c_name = (customer_name or "Valued Customer").replace("&", "and")
+    s_name = (shop_name or "Your Master Atelier").replace("&", "and")
+    g_type = (garment_type or "bespoke outfit").replace("&", "and")
+    ord_no = (order_number or "").replace("&", "and")
 
     if call_type == "trial_ready":
         return (
@@ -79,17 +79,16 @@ def trigger_outbound_call(
     if TELEPHONY_DRIVER == "twilio" and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER:
         try:
             from twilio.rest import Client
+            from twilio.twiml.voice_response import VoiceResponse
             client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-            # TwiML Say voice response in clear Indian-English accent
-            twiml_content = (
-                f'<Response>'
-                f'<Pause length="1"/>'
-                f'<Say voice="Polly.Aditi" language="en-IN">{message_text}</Say>'
-                f'<Pause length="1"/>'
-                f'<Say voice="Polly.Aditi" language="en-IN">Repeating message: {message_text}</Say>'
-                f'</Response>'
-            )
+            # Validated TwiML response with Polly Indian-English voice
+            response = VoiceResponse()
+            response.pause(length=1)
+            response.say(message_text, voice="Polly.Aditi", language="en-IN")
+            response.pause(length=1)
+            response.say(f"Repeating notification: {message_text}", voice="Polly.Aditi", language="en-IN")
+            twiml_content = str(response)
 
             call = client.calls.create(
                 twiml=twiml_content,

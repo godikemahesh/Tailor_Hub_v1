@@ -68,9 +68,29 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('tailorhub_token');
     localStorage.removeItem('tailorhub_user');
+    localStorage.removeItem('tailorhub_active_role');
     setToken(null);
     setUser(null);
   }, []);
+
+  const switchRole = useCallback(async (newRole) => {
+    try {
+      const res = await authAPI.updateRole(newRole);
+      if (res.data) {
+        setUser(res.data);
+        localStorage.setItem('tailorhub_user', JSON.stringify(res.data));
+        localStorage.setItem('tailorhub_active_role', newRole);
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('Backend role update notice, updating locally:', err);
+    }
+    const updated = { ...(user || {}), role: newRole };
+    setUser(updated);
+    localStorage.setItem('tailorhub_user', JSON.stringify(updated));
+    localStorage.setItem('tailorhub_active_role', newRole);
+    return updated;
+  }, [user]);
 
   const value = {
     user,
@@ -82,6 +102,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    switchRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

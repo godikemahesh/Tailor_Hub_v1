@@ -96,6 +96,10 @@ class ErrorBoundary extends React.Component {
 
 // Helper to determine starting view based on role
 function RoleRedirect() {
+  const token = localStorage.getItem('tailorhub_token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
   const role = localStorage.getItem('tailorhub_active_role') || 'tailor';
   return <Navigate to={role === 'tailor' ? '/tailor' : '/customer'} replace />;
 }

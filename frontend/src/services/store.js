@@ -72,95 +72,8 @@ const DEFAULT_TAILORS = [
   }
 ];
 
-// Initial seeded orders adhering to schema.sql
-const DEFAULT_ORDERS = [
-  {
-    id: 'ord-8842',
-    order_number: 'TH-2026-8842',
-    customer_id: 'cust-demo-1',
-    customer_name: 'Ananya Sen',
-    customer_phone: '+91 98765 43210',
-    customer_address: 'Flat 402, Green Glen Layout, Bellandur',
-    tailor_id: 'tailor-1',
-    tailor_name: 'Master Rajesh Kumar',
-    shop_name: 'Royal Stitch Studio',
-    member_name: 'Self',
-    garment_type: 'Silk Bridal Blouse',
-    status: 'stitching',
-    promised_date: 'Tomorrow, 5:00 PM',
-    is_express: true,
-    base_price: 2400,
-    total_price: 2400,
-    advance_paid: 1000,
-    balance_due: 1400,
-    measurements_snapshot: {
-      chest: '36.0',
-      waist: '30.0',
-      shoulder: '14.5',
-      front_length: '14.0',
-      front_neck_depth: '6.5',
-      back_neck_depth: '9.0',
-      sleeve_length: '10.5',
-      armhole: '15.0'
-    },
-    visual_specs: {
-      front_neck_style: 'sweetheart',
-      front_neck_label: 'Sweetheart Neck',
-      back_neck_style: 'deep_u_dori',
-      back_neck_label: 'Deep U with Latkan Dori',
-      sleeve_style: 'elbow_puff',
-      sleeve_label: 'Elbow-Length Puff Sleeve',
-      lining_type: 'Pure Cotton Mulmul',
-      pads_type: 'Included (Sewn-in)',
-      internal_margin_inches: 2.5,
-      fabric_color: 'Crimson Raw Silk',
-      special_instructions: 'Customer requested 2.5" extra safe inner margin for wedding weight fluctuation. Golden latkans provided with fabric.'
-    },
-    created_at: '2026-09-05T10:30:00Z'
-  },
-  {
-    id: 'ord-8841',
-    order_number: 'TH-2026-8841',
-    customer_id: 'cust-demo-2',
-    customer_name: 'Ramesh Patel',
-    customer_phone: '+91 98234 56789',
-    customer_address: '12 Temple View Road, Mylapore',
-    tailor_id: 'tailor-1',
-    tailor_name: 'Master Rajesh Kumar',
-    shop_name: 'Royal Stitch Studio',
-    member_name: 'Dad',
-    garment_type: 'Linen Formal Shirt & Trouser',
-    status: 'cutting',
-    promised_date: 'Sep 10, 2026',
-    is_express: false,
-    base_price: 3200,
-    total_price: 3200,
-    advance_paid: 1500,
-    balance_due: 1700,
-    measurements_snapshot: {
-      chest: '40.0',
-      waist: '34.0',
-      shoulder: '17.5',
-      length: '30.0',
-      sleeve: '25.0',
-      neck: '16.0'
-    },
-    visual_specs: {
-      front_neck_style: 'v_neck',
-      front_neck_label: 'Cutaway Spread Collar',
-      back_neck_style: 'potli_buttons',
-      back_neck_label: 'Classic Double Yoke Back',
-      sleeve_style: 'full_sleeve',
-      sleeve_label: 'Full Sleeve with 2" French Cuff',
-      lining_type: 'No Lining',
-      pads_type: 'None',
-      internal_margin_inches: 2.0,
-      fabric_color: 'Sky Blue Pure Italian Linen',
-      special_instructions: 'Slim fit cut with pen pocket inside left breast. French seams throughout.'
-    },
-    created_at: '2026-09-04T14:15:00Z'
-  }
-];
+// Initial seeded orders (empty by default so new accounts have clean state)
+const DEFAULT_ORDERS = [];
 
 export const store = {
   // ── Tailor Methods ──
@@ -206,23 +119,34 @@ export const store = {
   },
 
   // ── Orders Methods ──
-  getOrders: (userRole = 'all', userId = null) => {
+  getOrders: (userRole = 'all', userObj = null) => {
     try {
       const stored = localStorage.getItem('tailorhub_orders_list');
-      let orders = stored ? JSON.parse(stored) : DEFAULT_ORDERS;
+      let orders = stored ? JSON.parse(stored) : [];
       if (!stored) {
-        localStorage.setItem('tailorhub_orders_list', JSON.stringify(DEFAULT_ORDERS));
+        localStorage.setItem('tailorhub_orders_list', JSON.stringify([]));
       }
       if (userRole === 'tailor') {
-        // Return orders for this tailor
+        const tailorId = typeof userObj === 'object' ? userObj?.id : userObj;
+        const shopName = typeof userObj === 'object' ? userObj?.shop_name : null;
+        if (tailorId || shopName) {
+          return orders.filter(o => 
+            (tailorId && o.tailor_id === tailorId) ||
+            (shopName && o.shop_name === shopName)
+          );
+        }
         return orders;
       } else if (userRole === 'customer') {
+        const custId = typeof userObj === 'object' ? userObj?.id : userObj;
+        if (custId) {
+          return orders.filter(o => o.customer_id === custId);
+        }
         return orders;
       }
       return orders;
     } catch (e) {
       console.error(e);
-      return DEFAULT_ORDERS;
+      return [];
     }
   },
 
@@ -233,12 +157,12 @@ export const store = {
       id: `ord-${Date.now()}`,
       order_number: orderNumber,
       customer_id: orderData.customer_id || 'cust-demo-1',
-      customer_name: orderData.customer_name || (store.currentUser?.full_name || 'Customer'),
+      customer_name: orderData.customer_name || 'Customer',
       customer_phone: orderData.customer_phone || '+91 98765 43210',
-      customer_address: orderData.customer_address || '402 Sunrise Apartments, Indiranagar',
+      customer_address: orderData.customer_address || 'Customer Address',
       tailor_id: orderData.tailor_id || 'tailor-1',
-      tailor_name: orderData.tailor_name || 'Master Rajesh Kumar',
-      shop_name: orderData.shop_name || 'Royal Stitch Studio',
+      tailor_name: orderData.tailor_name || 'Master Tailor',
+      shop_name: orderData.shop_name || 'My Atelier Studio',
       member_name: orderData.member_name || 'Self',
       garment_type: orderData.garment_type || 'Bespoke Garment',
       status: 'received',
@@ -300,7 +224,7 @@ export const store = {
         const callRes = await ordersAPI.directCall({
           phone_number: targetOrder.customer_phone || '+919876543210',
           customer_name: targetOrder.customer_name || 'Valued Customer',
-          shop_name: targetOrder.shop_name || 'Royal Stitch Studio',
+          shop_name: targetOrder.shop_name || 'My Atelier Studio',
           garment_type: targetOrder.garment_type || 'Bespoke Garment',
           order_number: targetOrder.order_number || targetOrder.id,
           call_type: 'trial_ready'
@@ -338,7 +262,7 @@ export const store = {
       const res = await ordersAPI.directCall({
         phone_number: phoneToCall,
         customer_name: order.customer_name || 'Valued Customer',
-        shop_name: order.shop_name || 'Royal Stitch Studio',
+        shop_name: order.shop_name || 'My Atelier Studio',
         garment_type: order.garment_type || 'Bespoke Garment',
         order_number: order.order_number || order.id,
         call_type: order.status === 'trial_ready' ? 'trial_ready' : 'delivery_ready'
@@ -501,63 +425,8 @@ export const store = {
   }
 };
 
-// Seed records demonstrating distinct customer tracking
-const DEFAULT_RECORDS = [
-  {
-    id: 'rec-1',
-    customer_name: 'Sunita Verma',
-    customer_phone: '9876543210',
-    customer_code: 'REC-SV782',
-    garment_type: 'Blouse (Sweetheart)',
-    measurements: [
-      { key: 'Chest', value: '36.0', unit: 'inches' },
-      { key: 'Waist', value: '30.0', unit: 'inches' },
-      { key: 'Shoulder', value: '14.5', unit: 'inches' },
-      { key: 'Length', value: '14.0', unit: 'inches' },
-      { key: 'Sleeve Length', value: '10.0', unit: 'inches' }
-    ],
-    advance_paid: 500,
-    notes: 'Customer prefers deep back with handmade dori latkan. Deliver by Thursday.',
-    source: 'camera_ocr',
-    created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-  },
-  {
-    id: 'rec-2',
-    customer_name: 'Pooja Sharma',
-    customer_phone: '9811223344',
-    customer_code: 'REC-PS104',
-    garment_type: 'Anarkali Kurta',
-    measurements: [
-      { key: 'Chest', value: '38.0', unit: 'inches' },
-      { key: 'Waist', value: '32.0', unit: 'inches' },
-      { key: 'Hips', value: '40.0', unit: 'inches' },
-      { key: 'Length', value: '46.0', unit: 'inches' },
-      { key: 'Armhole', value: '16.5', unit: 'inches' }
-    ],
-    advance_paid: 1000,
-    notes: 'Flared 32-kali with churidar fit. Double safety seam margin.',
-    source: 'voice_ai',
-    created_at: new Date(Date.now() - 86400000).toISOString()
-  },
-  {
-    id: 'rec-3',
-    customer_name: 'Pooja Sharma',
-    customer_phone: '9765432190',
-    customer_code: 'REC-PS892',
-    garment_type: 'Formal Blazer & Trousers',
-    measurements: [
-      { key: 'Chest', value: '34.0', unit: 'inches' },
-      { key: 'Waist', value: '28.0', unit: 'inches' },
-      { key: 'Shoulder', value: '15.0', unit: 'inches' },
-      { key: 'Inseam', value: '30.0', unit: 'inches' },
-      { key: 'Outseam', value: '39.0', unit: 'inches' }
-    ],
-    advance_paid: 1500,
-    notes: 'Working at Tech Park. Distinct client from Pooja (Anarkali). Slim trouser cut.',
-    source: 'manual',
-    created_at: new Date().toISOString()
-  }
-];
+// Seed records demonstrating distinct customer tracking (empty by default so new accounts have no mock customers)
+const DEFAULT_RECORDS = [];
 
 
 // Seed showcase posts for Master Tailor creation feed

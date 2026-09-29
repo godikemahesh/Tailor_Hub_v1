@@ -15,9 +15,17 @@ import './Header.css';
 import { Link } from 'react-router-dom';
 
 export default function Header({ currentRole, onToggleRole, onOpenQuickOrder }) {
-  const { user, logout } = useAuth();
+  const { user, logout, switchRole } = useAuth();
 
   const isTailor = currentRole === 'tailor';
+
+  const handleToggleRole = async () => {
+    const nextRole = isTailor ? 'customer' : 'tailor';
+    if (switchRole) {
+      await switchRole(nextRole);
+    }
+    window.location.href = nextRole === 'tailor' ? '/tailor' : '/customer';
+  };
 
   return (
     <header className="app-header">
@@ -34,11 +42,20 @@ export default function Header({ currentRole, onToggleRole, onOpenQuickOrder }) 
       </div>
 
       <div className="header-right">
-        {/* Static Role Identifier Pill (No internal workspace switching) */}
-        <div className={`user-role-pill ${isTailor ? 'tailor' : 'customer'}`}>
+        {/* Interactive Role Identifier & Switcher Pill */}
+        <button 
+          type="button"
+          onClick={handleToggleRole}
+          className={`user-role-pill ${isTailor ? 'tailor' : 'customer'}`}
+          title={`Click to switch to ${isTailor ? 'Customer Portal' : 'Tailor Atelier OS'}`}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
           {isTailor ? <Scissors size={14} /> : <User size={14} />}
           <span>{isTailor ? 'Tailor Atelier OS' : 'Customer Portal'}</span>
-        </div>
+          <span style={{ fontSize: '0.72rem', opacity: 0.8, textDecoration: 'underline', marginLeft: '2px' }}>
+            (Switch to {isTailor ? 'Customer' : 'Tailor'})
+          </span>
+        </button>
 
         {/* Capacity status pill */}
         {isTailor && (
@@ -68,7 +85,7 @@ export default function Header({ currentRole, onToggleRole, onOpenQuickOrder }) 
           <div className="user-info-text">
             <span className="user-name">{user?.full_name || (isTailor ? 'Master Tailor' : 'Valued Customer')}</span>
             <span className="user-role-badge">
-              {isTailor ? (user?.shop_name || 'Royal Stitch Studio') : 'Loyal Customer'}
+              {isTailor ? (user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier')) : 'Loyal Customer'}
             </span>
           </div>
           <button 

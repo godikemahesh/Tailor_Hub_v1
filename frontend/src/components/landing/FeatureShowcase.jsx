@@ -33,7 +33,7 @@ const FEATURES = [
       'Intelligent echo filtering that ignores ambient shop chatter',
       '1-tap manual adjustment if a customer requests a looser or tighter fit'
     ],
-    route: '/records',
+    route: '/login',
     actionText: 'Try Voice Tape in Studio',
     visualType: 'voice'
   },
@@ -51,7 +51,7 @@ const FEATURES = [
       '1-Click printable PDF "Cutting Job Card" with QR code tracking',
       'Both tailor & client sign off digitally before scissors touch fabric'
     ],
-    route: '/spec-sheet',
+    route: '/login',
     actionText: 'Design 2D Spec Blueprint',
     visualType: 'blueprint'
   },
@@ -69,7 +69,7 @@ const FEATURES = [
       'Instantly imports legacy customer records into searchable cloud profiles',
       'Never lose a past client’s measurements when physical books wear out'
     ],
-    route: '/records',
+    route: '/login',
     actionText: 'Scan Physical Register',
     visualType: 'ocr'
   },
@@ -87,7 +87,7 @@ const FEATURES = [
       'Eliminates unread text messages, delayed pickups, and workshop rack clutter',
       'Real-time call dispatch log with call status and confirmation timestamps'
     ],
-    route: '/tailor',
+    route: '/login',
     actionText: 'Explore Order OS & Calls',
     visualType: 'telephony'
   },
@@ -105,7 +105,7 @@ const FEATURES = [
       'Flexible fabric logistics: doorstep fabric pickup or direct studio drop-off',
       'Complete personal tailoring archive with past orders and fit notes'
     ],
-    route: '/customer',
+    route: '/login',
     actionText: 'Open Customer Wardrobe',
     visualType: 'family'
   },
@@ -123,7 +123,7 @@ const FEATURES = [
       'Automated trial-ready notifications with pick-up reminders',
       'Financial overview: advance deposits, balance due, and daily stitching revenue'
     ],
-    route: '/tailor',
+    route: '/login',
     actionText: 'Launch Tailor Atelier OS',
     visualType: 'timeline'
   }

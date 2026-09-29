@@ -12,6 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { useAuth } from '../context/AuthContext';
 
 const FRONT_NECK_OPTIONS = [
   { id: 'sweetheart', label: 'Sweetheart', d: 'M 40,20 Q 75,55 100,45 Q 125,55 160,20' },
@@ -36,6 +37,7 @@ const BACK_OPTIONS = [
 ];
 
 export default function SpecSheetPage() {
+  const { user } = useAuth();
   const [garmentType, setGarmentType] = useState('blouse');
   const [clientName, setClientName] = useState('Ananya Sen');
   const [orderNumber, setOrderNumber] = useState('TH-8842');
@@ -105,7 +107,9 @@ export default function SpecSheetPage() {
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.text('Customer Digital Signature: [Verified on App]', 25, 150);
-    doc.text('Master Tailor Sign-off: Rajesh Kumar (Royal Stitch)', 110, 150);
+    const tailorSignName = user?.full_name || 'Master Tailor';
+    const tailorShopName = user?.shop_name || (user?.full_name ? `${user.full_name}'s Atelier` : 'Master Atelier');
+    doc.text(`Master Tailor Sign-off: ${tailorSignName} (${tailorShopName})`, 110, 150);
 
     doc.save(`TailorHub_JobCard_${orderNumber}.pdf`);
   };
