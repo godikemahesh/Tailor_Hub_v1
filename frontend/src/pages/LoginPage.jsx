@@ -90,7 +90,6 @@ export default function LoginPage() {
 
         localStorage.setItem('tailorhub_user', JSON.stringify(userToSave));
         if (activePortal === 'tailor') {
-          store.addTailor(userToSave);
           // Clear any leftover cached mock customer records from prior sessions
           localStorage.removeItem('tailorhub_records');
         }

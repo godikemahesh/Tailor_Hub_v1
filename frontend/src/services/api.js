@@ -66,6 +66,7 @@ export const ordersAPI = {
 
 // ── Shops API ──
 export const shopsAPI = {
+  list: () => api.get('/api/shops/'),
   create: (data) => api.post('/api/shops/', data),
   getMyShop: () => api.get('/api/shops/me'),
   updateMyShop: (data) => api.put('/api/shops/me', data),

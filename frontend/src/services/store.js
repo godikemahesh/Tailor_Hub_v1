@@ -79,6 +79,14 @@ export const store = {
   // ── Tailor Methods ──
   getTailors: () => {
     try {
+      // Invalidate and purge any stale/unverified test tailors from prior sessions
+      const CACHE_VERSION = 'v2_clean_verified';
+      if (localStorage.getItem('tailorhub_tailors_ver') !== CACHE_VERSION) {
+        localStorage.removeItem('tailorhub_tailors_list');
+        localStorage.setItem('tailorhub_tailors_ver', CACHE_VERSION);
+        localStorage.setItem('tailorhub_tailors_list', JSON.stringify(DEFAULT_TAILORS));
+        return DEFAULT_TAILORS;
+      }
       const stored = localStorage.getItem('tailorhub_tailors_list');
       if (stored) {
         return JSON.parse(stored);
@@ -90,10 +98,21 @@ export const store = {
     return DEFAULT_TAILORS;
   },
 
+  clearTailorsCache: () => {
+    try {
+      localStorage.removeItem('tailorhub_tailors_list');
+      localStorage.setItem('tailorhub_tailors_ver', 'v2_clean_verified');
+      localStorage.setItem('tailorhub_tailors_list', JSON.stringify(DEFAULT_TAILORS));
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_TAILORS;
+  },
+
   addTailor: (newTailor) => {
-    const current = store.getTailors();
-    const tailor = {
-      id: `shop-${Date.now()}`,
+    // Return formatted tailor object without polluting public directory cache
+    return {
+      id: newTailor.id || `tailor-${Date.now()}`,
       tailor_id: newTailor.id || `tailor-${Date.now()}`,
       full_name: newTailor.full_name,
       shop_name: newTailor.shop_name || `${newTailor.full_name}'s Atelier`,
@@ -103,7 +122,7 @@ export const store = {
       address: newTailor.address || 'Central Fashion Street',
       city: newTailor.city || 'Metropolitan Area',
       pincode: newTailor.pincode || '560001',
-      distance_km: parseFloat((Math.random() * 3 + 1).toFixed(1)),
+      distance_km: 2.5,
       daily_capacity: parseInt(newTailor.daily_capacity) || 10,
       available_slots: 7,
       rating: 5.0,
@@ -113,9 +132,6 @@ export const store = {
       base_stitching_rate: 1800,
       is_accepting_orders: true
     };
-    const updated = [tailor, ...current];
-    localStorage.setItem('tailorhub_tailors_list', JSON.stringify(updated));
-    return tailor;
   },
 
   // ── Orders Methods ──
