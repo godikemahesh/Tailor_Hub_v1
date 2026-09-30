@@ -3,74 +3,10 @@
  * Strictly adheres to schema.sql (users, tailor_shops, orders, visual_spec_sheets)
  * Synchronizes in-memory and persistent localStorage data for tailors and orders.
  */
-import { ordersAPI } from './api';
+import { ordersAPI, shopsAPI } from './api';
 
-// Initial curated master tailors conforming to schema.sql
-const DEFAULT_TAILORS = [
-  {
-    id: 'shop-1',
-    tailor_id: 'tailor-1',
-    full_name: 'Master Rajesh Kumar',
-    shop_name: 'Royal Stitch Studio',
-    tagline: 'Master Tailor • Heritage Bespoke Specialist',
-    experience_years: 18,
-    specialization: 'Bridal Silk Blouses, Zardozi Hand Embroidery & Banarasi Sarees',
-    address: '42 Heritage Weaver Lane, Near Silk Bazaar, T. Nagar',
-    city: 'Chennai',
-    pincode: '600017',
-    distance_km: 1.4,
-    daily_capacity: 12,
-    available_slots: 5,
-    rating: 4.9,
-    reviews_count: 142,
-    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-    supported_garments: ['blouse', 'kurta', 'suit', 'dress'],
-    base_stitching_rate: 1800,
-    is_accepting_orders: true
-  },
-  {
-    id: 'shop-2',
-    tailor_id: 'tailor-2',
-    full_name: 'Ustad Mohammed Irfan',
-    shop_name: 'Savile Row Savvy Tailors',
-    tagline: 'Savile Row Trained Master Cutter',
-    experience_years: 24,
-    specialization: 'Custom Tuxedos, Bandhgala Royal Suits & Oxford Shirts',
-    address: '15 High Street, Commercial Zone, Indiranagar',
-    city: 'Bengaluru',
-    pincode: '560038',
-    distance_km: 2.8,
-    daily_capacity: 8,
-    available_slots: 3,
-    rating: 4.95,
-    reviews_count: 218,
-    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-    supported_garments: ['shirt', 'trouser', 'suit', 'blazer'],
-    base_stitching_rate: 3200,
-    is_accepting_orders: true
-  },
-  {
-    id: 'shop-3',
-    tailor_id: 'tailor-3',
-    full_name: 'Sharda Devi',
-    shop_name: 'Sharda Ethnic Couture',
-    tagline: 'Fine Artisanal Finishing & Alteration Queen',
-    experience_years: 14,
-    specialization: 'Anarkali Suits, Designer Lehengas & Western Gowns',
-    address: 'Shop 8, Sector 14 Market, Near Metro Gate 2',
-    city: 'Gurugram',
-    pincode: '122001',
-    distance_km: 3.5,
-    daily_capacity: 10,
-    available_slots: 6,
-    rating: 4.85,
-    reviews_count: 96,
-    avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
-    supported_garments: ['blouse', 'kurta', 'dress', 'lehenga'],
-    base_stitching_rate: 2200,
-    is_accepting_orders: true
-  }
-];
+// Initial curated master tailors conforming to schema.sql (empty by default - all tailors loaded from database)
+const DEFAULT_TAILORS = [];
 
 // Initial seeded orders (empty by default so new accounts have clean state)
 const DEFAULT_ORDERS = [];
@@ -80,12 +16,12 @@ export const store = {
   getTailors: () => {
     try {
       // Invalidate and purge any stale/unverified test tailors from prior sessions
-      const CACHE_VERSION = 'v2_clean_verified';
+      const CACHE_VERSION = 'v3_real_db_only';
       if (localStorage.getItem('tailorhub_tailors_ver') !== CACHE_VERSION) {
         localStorage.removeItem('tailorhub_tailors_list');
         localStorage.setItem('tailorhub_tailors_ver', CACHE_VERSION);
-        localStorage.setItem('tailorhub_tailors_list', JSON.stringify(DEFAULT_TAILORS));
-        return DEFAULT_TAILORS;
+        localStorage.setItem('tailorhub_tailors_list', JSON.stringify([]));
+        return [];
       }
       const stored = localStorage.getItem('tailorhub_tailors_list');
       if (stored) {
@@ -94,23 +30,21 @@ export const store = {
     } catch (e) {
       console.error(e);
     }
-    localStorage.setItem('tailorhub_tailors_list', JSON.stringify(DEFAULT_TAILORS));
-    return DEFAULT_TAILORS;
+    return [];
   },
 
   clearTailorsCache: () => {
     try {
       localStorage.removeItem('tailorhub_tailors_list');
-      localStorage.setItem('tailorhub_tailors_ver', 'v2_clean_verified');
-      localStorage.setItem('tailorhub_tailors_list', JSON.stringify(DEFAULT_TAILORS));
+      localStorage.setItem('tailorhub_tailors_ver', 'v3_real_db_only');
+      localStorage.setItem('tailorhub_tailors_list', JSON.stringify([]));
     } catch (e) {
       console.error(e);
     }
-    return DEFAULT_TAILORS;
+    return [];
   },
 
   addTailor: (newTailor) => {
-    // Return formatted tailor object without polluting public directory cache
     return {
       id: newTailor.id || `tailor-${Date.now()}`,
       tailor_id: newTailor.id || `tailor-${Date.now()}`,
@@ -135,19 +69,29 @@ export const store = {
   },
 
   // ── Orders Methods ──
+  syncOrdersFromBackend: async () => {
+    try {
+      const res = await ordersAPI.list();
+      if (res.data && Array.isArray(res.data)) {
+        localStorage.setItem('tailorhub_orders_list', JSON.stringify(res.data));
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('Could not sync orders from backend API:', err);
+    }
+    return store.getOrders();
+  },
+
   getOrders: (userRole = 'all', userObj = null) => {
     try {
       const stored = localStorage.getItem('tailorhub_orders_list');
       let orders = stored ? JSON.parse(stored) : [];
-      if (!stored) {
-        localStorage.setItem('tailorhub_orders_list', JSON.stringify([]));
-      }
       if (userRole === 'tailor') {
         const tailorId = typeof userObj === 'object' ? userObj?.id : userObj;
         const shopName = typeof userObj === 'object' ? userObj?.shop_name : null;
         if (tailorId || shopName) {
           return orders.filter(o => 
-            (tailorId && o.tailor_id === tailorId) ||
+            (tailorId && (o.tailor_id === tailorId || String(o.tailor_id) === String(tailorId))) ||
             (shopName && o.shop_name === shopName)
           );
         }
@@ -155,7 +99,7 @@ export const store = {
       } else if (userRole === 'customer') {
         const custId = typeof userObj === 'object' ? userObj?.id : userObj;
         if (custId) {
-          return orders.filter(o => o.customer_id === custId);
+          return orders.filter(o => o.customer_id === custId || String(o.customer_id) === String(custId));
         }
         return orders;
       }
@@ -166,52 +110,70 @@ export const store = {
     }
   },
 
-  createOrder: (orderData) => {
+  createOrder: async (orderData) => {
+    let savedOrder = null;
+    try {
+      const payload = {
+        tailor_id: orderData.tailor_id,
+        member_name: orderData.member_name || 'Self',
+        garment_type: orderData.garment_type || 'Bespoke Garment',
+        measurements_snapshot: orderData.measurements_snapshot || {},
+        is_express: orderData.is_express || false,
+        base_price: parseFloat(orderData.base_price) || 0,
+        express_fee: parseFloat(orderData.express_fee) || 0,
+        total_price: parseFloat(orderData.total_price) || 0,
+        advance_paid: parseFloat(orderData.advance_paid) || 0,
+        balance_due: parseFloat(orderData.balance_due) || 0,
+        cloth_received_notes: orderData.cloth_received_notes || null,
+        customer_notes: orderData.customer_notes || null,
+        visual_specs: orderData.visual_specs || null
+      };
+      const res = await ordersAPI.create(payload);
+      if (res.data) {
+        savedOrder = {
+          ...res.data,
+          customer_name: res.data.customer_name || orderData.customer_name,
+          customer_phone: res.data.customer_phone || orderData.customer_phone,
+          shop_name: res.data.shop_name || orderData.shop_name,
+          tailor_name: res.data.tailor_name || orderData.tailor_name,
+          visual_specs: res.data.visual_specs || orderData.visual_specs
+        };
+      }
+    } catch (err) {
+      console.warn('Backend API order creation failed, persisting locally:', err);
+    }
+
+    if (!savedOrder) {
+      const orderNumber = `TH-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+      savedOrder = {
+        id: `ord-${Date.now()}`,
+        order_number: orderNumber,
+        customer_id: orderData.customer_id || 'cust-demo-1',
+        customer_name: orderData.customer_name || 'Customer',
+        customer_phone: orderData.customer_phone || '+91 98765 43210',
+        customer_address: orderData.customer_address || 'Customer Address',
+        tailor_id: orderData.tailor_id || 'tailor-1',
+        tailor_name: orderData.tailor_name || 'Master Tailor',
+        shop_name: orderData.shop_name || 'My Atelier Studio',
+        member_name: orderData.member_name || 'Self',
+        garment_type: orderData.garment_type || 'Bespoke Garment',
+        status: 'received',
+        promised_date: orderData.promised_date || 'In 7 Days',
+        is_express: orderData.is_express || false,
+        base_price: orderData.base_price || 2200,
+        total_price: orderData.total_price || 2200,
+        advance_paid: orderData.advance_paid || 1000,
+        balance_due: (orderData.total_price || 2200) - (orderData.advance_paid || 1000),
+        measurements_snapshot: orderData.measurements_snapshot || {},
+        visual_specs: orderData.visual_specs || {},
+        created_at: new Date().toISOString()
+      };
+    }
+
     const current = store.getOrders();
-    const orderNumber = `TH-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newOrder = {
-      id: `ord-${Date.now()}`,
-      order_number: orderNumber,
-      customer_id: orderData.customer_id || 'cust-demo-1',
-      customer_name: orderData.customer_name || 'Customer',
-      customer_phone: orderData.customer_phone || '+91 98765 43210',
-      customer_address: orderData.customer_address || 'Customer Address',
-      tailor_id: orderData.tailor_id || 'tailor-1',
-      tailor_name: orderData.tailor_name || 'Master Tailor',
-      shop_name: orderData.shop_name || 'My Atelier Studio',
-      member_name: orderData.member_name || 'Self',
-      garment_type: orderData.garment_type || 'Bespoke Garment',
-      status: 'received',
-      promised_date: orderData.promised_date || 'In 5 Days',
-      is_express: orderData.is_express || false,
-      base_price: orderData.base_price || 2200,
-      total_price: orderData.total_price || 2200,
-      advance_paid: orderData.advance_paid || 1000,
-      balance_due: (orderData.total_price || 2200) - (orderData.advance_paid || 1000),
-      measurements_snapshot: orderData.measurements_snapshot || {
-        chest: '36.0',
-        waist: '30.0',
-        shoulder: '14.5',
-        front_length: '14.0'
-      },
-      visual_specs: orderData.visual_specs || {
-        front_neck_style: 'sweetheart',
-        front_neck_label: 'Sweetheart Neck',
-        back_neck_style: 'deep_u_dori',
-        back_neck_label: 'Deep U with Latkan Dori',
-        sleeve_style: 'elbow_puff',
-        sleeve_label: 'Elbow Puff Sleeve',
-        lining_type: 'Pure Cotton Mulmul',
-        pads_type: 'Included (Sewn-in)',
-        internal_margin_inches: 2.5,
-        fabric_color: 'Customer Sourced Fabric',
-        special_instructions: 'Customer customized via 2D visualizer.'
-      },
-      created_at: new Date().toISOString()
-    };
-    const updated = [newOrder, ...current];
+    const updated = [savedOrder, ...current.filter(o => o.id !== savedOrder.id)];
     localStorage.setItem('tailorhub_orders_list', JSON.stringify(updated));
-    return newOrder;
+    return savedOrder;
   },
 
   advanceOrderStatus: async (orderId) => {
@@ -233,6 +195,15 @@ export const store = {
     });
 
     localStorage.setItem('tailorhub_orders_list', JSON.stringify(updated));
+
+    // Update status in backend DB if valid UUID
+    if (nextStatus && orderId) {
+      try {
+        await ordersAPI.updateStatus(orderId, nextStatus);
+      } catch (e) {
+        console.warn('Backend updateStatus error:', e);
+      }
+    }
 
     // Automated Twilio Voice Call when status reaches trial_ready
     if (nextStatus === 'trial_ready' && targetOrder) {

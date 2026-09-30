@@ -73,8 +73,12 @@ export default function TailorDashboard() {
 
   useEffect(() => {
     // Load orders scoped to this tailor
-    const currentOrders = store.getOrders('tailor', user);
-    setOrders(currentOrders);
+    setOrders(store.getOrders('tailor', user));
+    const sync = async () => {
+      await store.syncOrdersFromBackend();
+      setOrders(store.getOrders('tailor', user));
+    };
+    sync();
   }, [user]);
 
   const handleAdvanceStage = async (orderId, e) => {

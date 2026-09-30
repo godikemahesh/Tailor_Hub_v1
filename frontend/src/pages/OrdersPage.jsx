@@ -31,7 +31,7 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeOrderModal, setActiveOrderModal] = useState(null);
 
-  useEffect(() => {
+  const renderOrders = () => {
     try {
       const storeOrders = store.getOrders(user?.role || 'all', user);
       if (storeOrders && storeOrders.length > 0) {
@@ -59,6 +59,15 @@ export default function OrdersPage() {
       console.error(e);
       setOrders([]);
     }
+  };
+
+  useEffect(() => {
+    renderOrders();
+    const sync = async () => {
+      await store.syncOrdersFromBackend();
+      renderOrders();
+    };
+    sync();
   }, [user]);
 
   const advanceStage = (id) => {

@@ -87,6 +87,11 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     setOrders(store.getOrders('customer', user));
+    const sync = async () => {
+      await store.syncOrdersFromBackend();
+      setOrders(store.getOrders('customer', user));
+    };
+    sync();
   }, [user]);
 
   const STAGE_NAMES = ['Received', 'Cutting', 'Stitching', 'Trial Ready', 'Delivered'];

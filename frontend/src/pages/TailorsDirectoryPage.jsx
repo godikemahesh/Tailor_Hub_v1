@@ -35,21 +35,21 @@ export default function TailorsDirectoryPage() {
           const mapped = res.data.map((shop, idx) => ({
             id: shop.id || `shop-${idx}`,
             tailor_id: shop.tailor_id,
-            full_name: shop.shop_name,
+            full_name: shop.owner_name || shop.shop_name,
             shop_name: shop.shop_name,
-            experience_years: 12 + (idx * 3),
-            specialization: Array.isArray(shop.supported_garments) 
+            experience_years: shop.experience_years || (10 + (idx * 2)),
+            specialization: shop.specialization || (Array.isArray(shop.supported_garments) 
               ? shop.supported_garments.join(', ') 
-              : (shop.tagline || 'Bespoke Tailoring'),
+              : (shop.tagline || 'Bespoke Tailoring')),
             address: shop.address || 'Central Fashion Atelier',
             city: shop.city || 'Bengaluru',
             pincode: shop.pincode || '560001',
             distance_km: (1.4 + idx * 0.7).toFixed(1),
             available_slots: shop.daily_capacity || 5,
-            rating: 4.9,
-            reviews_count: 95 + (idx * 20),
-            avatar_url: cleanList[idx % cleanList.length]?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-            base_stitching_rate: 1800 + (idx * 400),
+            rating: shop.rating || 4.9,
+            reviews_count: shop.reviews_count || 120,
+            avatar_url: shop.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+            base_stitching_rate: shop.base_stitching_rate || 1800,
             is_accepting_orders: shop.is_accepting_orders ?? true
           }));
           setTailors(mapped);
@@ -131,92 +131,102 @@ export default function TailorsDirectoryPage() {
       </div>
 
       {/* Tailor Cards Grid */}
-      <div className="tailor-cards-grid">
-        {filteredTailors.map(tailor => (
-          <div key={tailor.id} className="tailor-card">
-            <div className="tailor-card-header">
-              {/* 1. Tailor Photo */}
-              <img 
-                src={tailor.avatar_url} 
-                alt={tailor.full_name} 
-                className="tailor-photo-img" 
-              />
+      {filteredTailors.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', margin: '1rem 0' }}>
+          <Users size={40} color="#94a3b8" style={{ margin: '0 auto 1rem' }} />
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#334155' }}>No Registered Master Tailors Found</h3>
+          <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '440px', margin: '0.5rem auto' }}>
+            There are currently no registered tailor studios matching this search. New ateliers registered on TailorHub will appear here in real-time.
+          </p>
+        </div>
+      ) : (
+        <div className="tailor-cards-grid">
+          {filteredTailors.map(tailor => (
+            <div key={tailor.id} className="tailor-card">
+              <div className="tailor-card-header">
+                {/* 1. Tailor Photo */}
+                <img 
+                  src={tailor.avatar_url} 
+                  alt={tailor.full_name} 
+                  className="tailor-photo-img" 
+                />
 
-              <div className="tailor-main-info">
-                {/* 2. Tailor Name */}
-                <div className="tailor-name-row">
-                  <h3 className="tailor-full-name">{tailor.full_name}</h3>
-                  <div className="tailor-rating-badge">
-                    <Star size={12} fill="#e6af2e" color="#e6af2e" />
-                    <span>{tailor.rating}</span>
-                    <span className="reviews-num">({tailor.reviews_count})</span>
+                <div className="tailor-main-info">
+                  {/* 2. Tailor Name */}
+                  <div className="tailor-name-row">
+                    <h3 className="tailor-full-name">{tailor.full_name}</h3>
+                    <div className="tailor-rating-badge">
+                      <Star size={12} fill="#e6af2e" color="#e6af2e" />
+                      <span>{tailor.rating}</span>
+                      <span className="reviews-num">({tailor.reviews_count})</span>
+                    </div>
+                  </div>
+
+                  <div className="tailor-shop-title">{tailor.shop_name}</div>
+                  
+                  {/* 5. Kms away from the user */}
+                  <div className="tailor-distance-pill">
+                    <MapPin size={13} />
+                    <span>{tailor.distance_km} kms away</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="tailor-card-body">
+                {/* 3. Experience Years */}
+                <div className="tailor-detail-row">
+                  <Briefcase size={14} className="detail-icon" />
+                  <div>
+                    <span className="detail-label">Experience:</span>
+                    <strong className="detail-val">{tailor.experience_years} Years Master Craftsman</strong>
                   </div>
                 </div>
 
-                <div className="tailor-shop-title">{tailor.shop_name}</div>
-                
-                {/* 5. Kms away from the user */}
-                <div className="tailor-distance-pill">
-                  <MapPin size={13} />
-                  <span>{tailor.distance_km} kms away</span>
+                {/* 4. Specialization */}
+                <div className="tailor-detail-row">
+                  <Sparkles size={14} className="detail-icon" />
+                  <div>
+                    <span className="detail-label">Specialization:</span>
+                    <div className="specialization-text">{tailor.specialization}</div>
+                  </div>
                 </div>
+
+                {/* 6. Tailor Address */}
+                <div className="tailor-detail-row">
+                  <MapPin size={14} className="detail-icon" />
+                  <div>
+                    <span className="detail-label">Workshop Address:</span>
+                    <div className="tailor-address-text">{tailor.address}, {tailor.city} - {tailor.pincode}</div>
+                  </div>
+                </div>
+
+                {/* Capacity Status */}
+                <div className="tailor-capacity-pill">
+                  <span className="pulse-dot"></span>
+                  <span>Accepting Orders • {tailor.available_slots} slots available this week</span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="tailor-card-footer">
+                <div>
+                  <span className="rate-label">Base Stitching:</span>
+                  <div className="rate-value">₹ {tailor.base_stitching_rate || 1800}</div>
+                </div>
+
+                <button
+                  type="button"
+                  className="book-with-tailor-btn"
+                  onClick={() => handleSelectTailor(tailor)}
+                >
+                  <span>Select Tailor & Customize Stitch</span>
+                  <ArrowRight size={15} />
+                </button>
               </div>
             </div>
-
-            <div className="tailor-card-body">
-              {/* 3. Experience Years */}
-              <div className="tailor-detail-row">
-                <Briefcase size={14} className="detail-icon" />
-                <div>
-                  <span className="detail-label">Experience:</span>
-                  <strong className="detail-val">{tailor.experience_years} Years Master Craftsman</strong>
-                </div>
-              </div>
-
-              {/* 4. Specialization */}
-              <div className="tailor-detail-row">
-                <Sparkles size={14} className="detail-icon" />
-                <div>
-                  <span className="detail-label">Specialization:</span>
-                  <div className="specialization-text">{tailor.specialization}</div>
-                </div>
-              </div>
-
-              {/* 6. Tailor Address */}
-              <div className="tailor-detail-row">
-                <MapPin size={14} className="detail-icon" />
-                <div>
-                  <span className="detail-label">Workshop Address:</span>
-                  <div className="tailor-address-text">{tailor.address}, {tailor.city} - {tailor.pincode}</div>
-                </div>
-              </div>
-
-              {/* Capacity Status */}
-              <div className="tailor-capacity-pill">
-                <span className="pulse-dot"></span>
-                <span>Accepting Orders • {tailor.available_slots} slots available this week</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="tailor-card-footer">
-              <div>
-                <span className="rate-label">Base Stitching:</span>
-                <div className="rate-value">₹ {tailor.base_stitching_rate || 1800}</div>
-              </div>
-
-              <button
-                type="button"
-                className="book-with-tailor-btn"
-                onClick={() => handleSelectTailor(tailor)}
-              >
-                <span>Select Tailor & Customize Stitch</span>
-                <ArrowRight size={15} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

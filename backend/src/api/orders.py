@@ -49,15 +49,18 @@ async def create_order(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new stitching order."""
+    from datetime import datetime, timedelta
+    promised = request.promised_date or (datetime.utcnow().date() + timedelta(days=7))
+
     if db is None:
         import uuid
-        from datetime import datetime
         order_dict = request.model_dump()
         order_dict["id"] = uuid.uuid4()
         order_dict["order_number"] = generate_order_number()
         order_dict["customer_id"] = current_user.id if current_user.role == "customer" else request.tailor_id
         order_dict["tailor_id"] = request.tailor_id if current_user.role == "customer" else current_user.id
         order_dict["status"] = "received"
+        order_dict["promised_date"] = promised
         order_dict["created_at"] = datetime.utcnow()
         return OrderResponse.model_validate(order_dict)
 
@@ -68,8 +71,8 @@ async def create_order(
         member_name=request.member_name,
         garment_type=request.garment_type,
         measurement_profile_id=request.measurement_profile_id,
-        measurements_snapshot=request.measurements_snapshot,
-        promised_date=request.promised_date,
+        measurements_snapshot=request.measurements_snapshot or {},
+        promised_date=promised,
         is_express=request.is_express,
         base_price=request.base_price,
         express_fee=request.express_fee,
@@ -82,7 +85,56 @@ async def create_order(
     db.add(order)
     await db.flush()
     await db.refresh(order)
-    return OrderResponse.model_validate(order)
+
+    if request.visual_specs:
+        from src.models.orm_models import VisualSpecSheet
+        v_specs = request.visual_specs
+        v_sheet = VisualSpecSheet(
+            order_id=order.id,
+            garment_type=order.garment_type,
+            front_neck_style=v_specs.get("front_neck_style", "round"),
+            back_neck_style=v_specs.get("back_neck_style", "deep_u"),
+            sleeve_style=v_specs.get("sleeve_style", "short"),
+            lining_type=v_specs.get("lining_type", "cotton"),
+            pads_type=v_specs.get("pads_type", "none"),
+            internal_margin_inches=float(v_specs.get("internal_margin_inches") or 2.0),
+            special_instructions=v_specs.get("special_instructions")
+        )
+        db.add(v_sheet)
+        await db.flush()
+
+    from sqlalchemy.orm import selectinload
+    stmt = (
+        select(Order)
+        .where(Order.id == order.id)
+        .options(
+            selectinload(Order.customer),
+            selectinload(Order.tailor).selectinload(User.shop),
+            selectinload(Order.visual_spec_sheet)
+        )
+    )
+    res = await db.execute(stmt)
+    loaded_order = res.scalar_one()
+
+    resp = OrderResponse.model_validate(loaded_order)
+    if loaded_order.customer:
+        resp.customer_name = loaded_order.customer.full_name
+        resp.customer_phone = loaded_order.customer.phone_number
+    if loaded_order.tailor:
+        resp.tailor_name = loaded_order.tailor.full_name
+        if loaded_order.tailor.shop:
+            resp.shop_name = loaded_order.tailor.shop.shop_name
+    if loaded_order.visual_spec_sheet:
+        resp.visual_specs = {
+            "front_neck_style": loaded_order.visual_spec_sheet.front_neck_style,
+            "back_neck_style": loaded_order.visual_spec_sheet.back_neck_style,
+            "sleeve_style": loaded_order.visual_spec_sheet.sleeve_style,
+            "lining_type": loaded_order.visual_spec_sheet.lining_type,
+            "pads_type": loaded_order.visual_spec_sheet.pads_type,
+            "internal_margin_inches": float(loaded_order.visual_spec_sheet.internal_margin_inches or 2.0),
+            "special_instructions": loaded_order.visual_spec_sheet.special_instructions
+        }
+    return resp
 
 
 @router.get("/", response_model=List[OrderResponse])
@@ -92,23 +144,49 @@ async def list_orders(
     current_user: User = Depends(get_current_user)
 ):
     """List orders for the current user (customer sees their orders, tailor sees shop orders)."""
-    if db is not None:
-        try:
-            query = select(Order)
-            if current_user.role == "customer":
-                query = query.where(Order.customer_id == current_user.id)
-            elif current_user.role == "tailor":
-                query = query.where(Order.tailor_id == current_user.id)
-            if status_filter:
-                query = query.where(Order.status == status_filter)
-            query = query.order_by(Order.created_at.desc())
-            result = await db.execute(query)
-            orders = result.scalars().all()
-            return [OrderResponse.model_validate(o) for o in orders]
-        except Exception as e:
-            print(f"[Orders API] Query notice: {e}")
-
-    return [OrderResponse.model_validate(o) for o in DEFAULT_ORDERS_FALLBACK]
+    if db is None:
+        return []
+    try:
+        from sqlalchemy.orm import selectinload
+        query = select(Order).options(
+            selectinload(Order.customer),
+            selectinload(Order.tailor).selectinload(User.shop),
+            selectinload(Order.visual_spec_sheet)
+        )
+        if current_user.role == "customer":
+            query = query.where(Order.customer_id == current_user.id)
+        elif current_user.role == "tailor":
+            query = query.where(Order.tailor_id == current_user.id)
+        if status_filter:
+            query = query.where(Order.status == status_filter)
+        query = query.order_by(Order.created_at.desc())
+        result = await db.execute(query)
+        orders = result.scalars().all()
+        responses = []
+        for o in orders:
+            resp = OrderResponse.model_validate(o)
+            if o.customer:
+                resp.customer_name = o.customer.full_name
+                resp.customer_phone = o.customer.phone_number
+            if o.tailor:
+                resp.tailor_name = o.tailor.full_name
+                if o.tailor.shop:
+                    resp.shop_name = o.tailor.shop.shop_name
+            if o.visual_spec_sheet:
+                resp.visual_specs = {
+                    "front_neck_style": o.visual_spec_sheet.front_neck_style,
+                    "back_neck_style": o.visual_spec_sheet.back_neck_style,
+                    "sleeve_style": o.visual_spec_sheet.sleeve_style,
+                    "lining_type": o.visual_spec_sheet.lining_type,
+                    "pads_type": o.visual_spec_sheet.pads_type,
+                    "internal_margin_inches": float(o.visual_spec_sheet.internal_margin_inches or 2.0),
+                    "special_instructions": o.visual_spec_sheet.special_instructions
+                }
+            responses.append(resp)
+        return responses
+    except Exception as e:
+        print(f"[Orders API] Query notice: {e}")
+        return []
 
 
 @router.get("/{order_id}", response_model=OrderResponse)

@@ -113,16 +113,24 @@ class ShopResponse(BaseModel):
     id: UUID
     tailor_id: UUID
     shop_name: str
-    tagline: Optional[str]
+    tagline: Optional[str] = None
     address: str
     city: str
     pincode: str
-    daily_capacity: int
-    express_surcharge_percent: float
-    standard_lead_days: int
-    supported_garments: List[str]
-    is_accepting_orders: bool
+    daily_capacity: int = 8
+    express_surcharge_percent: float = 30.0
+    standard_lead_days: int = 7
+    supported_garments: List[str] = []
+    is_accepting_orders: bool = True
     created_at: datetime
+    owner_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    experience_years: Optional[int] = 10
+    specialization: Optional[str] = None
+    rating: Optional[float] = 4.9
+    reviews_count: Optional[int] = 120
+    base_stitching_rate: Optional[int] = 1800
+    distance_km: Optional[float] = 2.5
 
     class Config:
         from_attributes = True
@@ -173,8 +181,8 @@ class OrderCreateRequest(BaseModel):
     member_name: str
     garment_type: str
     measurement_profile_id: Optional[UUID] = None
-    measurements_snapshot: Dict[str, Any]
-    promised_date: date
+    measurements_snapshot: Optional[Dict[str, Any]] = {}
+    promised_date: Optional[date] = None
     is_express: bool = False
     base_price: float = 0.0
     express_fee: float = 0.0
@@ -183,6 +191,7 @@ class OrderCreateRequest(BaseModel):
     balance_due: float = 0.0
     cloth_received_notes: Optional[str] = None
     customer_notes: Optional[str] = None
+    visual_specs: Optional[Dict[str, Any]] = None
 
 class OrderStatusUpdate(BaseModel):
     status: OrderStatus
@@ -205,17 +214,22 @@ class OrderResponse(BaseModel):
     measurement_profile_id: Optional[UUID] = None
     measurements_snapshot: Dict[str, Any] = {}
     status: str
-    promised_date: date
-    is_express: bool
-    base_price: float
+    promised_date: Optional[date] = None
+    is_express: bool = False
+    base_price: float = 0.0
     express_fee: float = 0.0
-    total_price: float
-    advance_paid: float
-    balance_due: float
+    total_price: float = 0.0
+    advance_paid: float = 0.0
+    balance_due: float = 0.0
     cloth_received_notes: Optional[str] = None
     customer_notes: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    tailor_name: Optional[str] = None
+    shop_name: Optional[str] = None
+    visual_specs: Optional[Dict[str, Any]] = None
 
     class Config:
         from_attributes = True

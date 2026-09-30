@@ -50,67 +50,35 @@ async def create_shop(
     return ShopResponse.model_validate(shop)
 
 
-DEFAULT_SHOPS_FALLBACK = [
-    {
-        "id": "11111111-1111-1111-1111-111111111111",
-        "tailor_id": "22222222-2222-2222-2222-222222222222",
-        "shop_name": "Royal Stitch Studio",
-        "tagline": "Master Tailor • Heritage Bespoke Specialist",
-        "address": "42 Heritage Weaver Lane, Near Silk Bazaar, T. Nagar",
-        "city": "Chennai",
-        "pincode": "600017",
-        "daily_capacity": 12,
-        "express_surcharge_percent": 30.0,
-        "standard_lead_days": 4,
-        "supported_garments": ["blouse", "kurta", "suit", "dress"],
-        "is_accepting_orders": True,
-        "created_at": "2026-01-01T00:00:00"
-    },
-    {
-        "id": "11111111-1111-1111-1111-111111111112",
-        "tailor_id": "22222222-2222-2222-2222-222222222223",
-        "shop_name": "Savile Row Savvy Tailors",
-        "tagline": "Savile Row Trained Master Cutter",
-        "address": "15 High Street, Commercial Zone, Indiranagar",
-        "city": "Bengaluru",
-        "pincode": "560038",
-        "daily_capacity": 8,
-        "express_surcharge_percent": 35.0,
-        "standard_lead_days": 6,
-        "supported_garments": ["shirt", "trouser", "suit", "blazer"],
-        "is_accepting_orders": True,
-        "created_at": "2026-01-01T00:00:00"
-    },
-    {
-        "id": "11111111-1111-1111-1111-111111111113",
-        "tailor_id": "22222222-2222-2222-2222-222222222224",
-        "shop_name": "Sharda Ethnic Couture",
-        "tagline": "Fine Artisanal Finishing & Alteration Queen",
-        "address": "Shop 8, Sector 14 Market, Near Metro Gate 2",
-        "city": "Gurugram",
-        "pincode": "122001",
-        "daily_capacity": 10,
-        "express_surcharge_percent": 25.0,
-        "standard_lead_days": 5,
-        "supported_garments": ["blouse", "kurta", "dress", "lehenga"],
-        "is_accepting_orders": True,
-        "created_at": "2026-01-01T00:00:00"
-    }
-]
+DEFAULT_SHOPS_FALLBACK = []
+
 
 @router.get("/", response_model=List[ShopResponse])
 async def list_shops(
     db: AsyncSession = Depends(get_db)
 ):
     """List all registered tailor shops for customer discovery."""
+    if db is None:
+        return []
     try:
-        result = await db.execute(select(TailorShop))
+        from sqlalchemy.orm import selectinload
+        result = await db.execute(select(TailorShop).options(selectinload(TailorShop.owner)))
         shops = result.scalars().all()
-        if shops:
-            return [ShopResponse.model_validate(s) for s in shops]
+        responses = []
+        for s in shops:
+            resp = ShopResponse.model_validate(s)
+            if s.owner:
+                resp.owner_name = s.owner.full_name
+                resp.avatar_url = s.owner.avatar_url or "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80"
+            else:
+                resp.owner_name = s.shop_name
+                resp.avatar_url = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80"
+            resp.specialization = ", ".join(s.supported_garments) if s.supported_garments else (s.tagline or "Bespoke Tailoring")
+            responses.append(resp)
+        return responses
     except Exception as e:
-        print(f"[Shops API] Database query fallback: {e}")
-    return [ShopResponse.model_validate(s) for s in DEFAULT_SHOPS_FALLBACK]
+        print(f"[Shops API] Database query notice: {e}")
+        return []
 
 
 @router.get("/me", response_model=ShopResponse)
