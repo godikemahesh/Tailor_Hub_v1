@@ -70,7 +70,10 @@ export default function OrdersPage() {
     sync();
   }, [user]);
 
+  const isTailor = (user?.role === 'tailor') || (localStorage.getItem('tailorhub_active_role') === 'tailor');
+
   const advanceStage = (id) => {
+    if (!isTailor) return; // Strictly read-only for customer accounts
     const seq = ['received', 'cutting', 'stitching', 'trial_ready', 'delivered'];
     setOrders(prev => prev.map(o => {
       if (o.id === id) {
@@ -103,18 +106,26 @@ export default function OrdersPage() {
         <div>
           <div className="atelier-badge">
             <Scissors size={14} />
-            <span>Studio Production OS</span>
+            <span>{isTailor ? 'Studio Production OS' : 'Live Orders Tracker'}</span>
           </div>
-          <h1 className="atelier-title">Orders & Job Cards Management</h1>
+          <h1 className="atelier-title">{isTailor ? 'Orders & Job Cards Management' : 'Live Orders & Garment Tracker'}</h1>
           <p className="atelier-subtitle">
-            Track garments across 5 stages of craftsmanship. Print cutting job cards and monitor delivery schedules.
+            {isTailor 
+              ? 'Track garments across 5 stages of craftsmanship. Print cutting job cards and monitor delivery schedules.'
+              : 'Track your custom tailored garments in real time across the 5 craftsmanship stages from cutting to trial fitting.'}
           </p>
         </div>
 
         <div className="quick-actions-bar">
-          <Link to="/spec-sheet" className="action-pill-btn primary">
-            <span>+ Create New Job Card</span>
-          </Link>
+          {isTailor ? (
+            <Link to="/spec-sheet" className="action-pill-btn primary">
+              <span>+ Create New Job Card</span>
+            </Link>
+          ) : (
+            <Link to="/design-order" className="action-pill-btn primary">
+              <span>+ Design New Garment</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -156,7 +167,7 @@ export default function OrdersPage() {
               <th>Target Deadline</th>
               <th>Pricing / Balance</th>
               <th>Production Stage</th>
-              <th>Action</th>
+              <th>{isTailor ? 'Action' : 'Live Status'}</th>
             </tr>
           </thead>
           <tbody>
@@ -206,17 +217,32 @@ export default function OrdersPage() {
                     >
                       <FileText size={14} />
                     </Link>
-                    {order.stage !== 'delivered' ? (
-                      <button 
-                        type="button" 
-                        className="advance-stage-btn"
-                        onClick={() => advanceStage(order.id)}
-                      >
-                        <span>Advance</span>
-                        <ChevronRight size={13} />
-                      </button>
+                    {isTailor ? (
+                      order.stage !== 'delivered' ? (
+                        <button 
+                          type="button" 
+                          className="advance-stage-btn"
+                          onClick={() => advanceStage(order.id)}
+                          title="Advance to next production stage"
+                        >
+                          <span>Advance</span>
+                          <ChevronRight size={13} />
+                        </button>
+                      ) : (
+                        <span className="completed-text">Done</span>
+                      )
                     ) : (
-                      <span className="completed-text">Done</span>
+                      <span 
+                        className="readonly-stage-text" 
+                        style={{ 
+                          fontSize: '0.82rem', 
+                          fontWeight: 600, 
+                          color: order.stage === 'delivered' ? '#16a34a' : order.stage === 'trial_ready' ? '#d97706' : '#64748b',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {order.stage === 'delivered' ? '✓ Delivered' : order.stage === 'trial_ready' ? '📞 Ready for Trial' : '⏳ In Crafting'}
+                      </span>
                     )}
                   </div>
                 </td>

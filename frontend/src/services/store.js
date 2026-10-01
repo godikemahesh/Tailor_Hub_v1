@@ -177,6 +177,19 @@ export const store = {
   },
 
   advanceOrderStatus: async (orderId) => {
+    const activeRole = localStorage.getItem('tailorhub_active_role');
+    const storedUser = localStorage.getItem('tailorhub_user');
+    let userObj = null;
+    try {
+      userObj = storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) {}
+
+    // Security guard: Customer accounts are strictly read-only
+    if (activeRole === 'customer' || (userObj && userObj.role === 'customer')) {
+      console.warn('[store] Customer role is read-only. Cannot advance production stages.');
+      return store.getOrders();
+    }
+
     const orders = store.getOrders();
     const seq = ['received', 'cutting', 'stitching', 'trial_ready', 'delivered'];
     let targetOrder = null;
