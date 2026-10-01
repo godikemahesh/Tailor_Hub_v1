@@ -14,18 +14,10 @@ import {
 import './Header.css';
 import { Link } from 'react-router-dom';
 
-export default function Header({ currentRole, onToggleRole, onOpenQuickOrder }) {
-  const { user, logout, switchRole } = useAuth();
+export default function Header({ currentRole, onOpenQuickOrder }) {
+  const { user, logout } = useAuth();
 
   const isTailor = currentRole === 'tailor';
-
-  const handleToggleRole = async () => {
-    const nextRole = isTailor ? 'customer' : 'tailor';
-    if (switchRole) {
-      await switchRole(nextRole);
-    }
-    window.location.href = nextRole === 'tailor' ? '/tailor' : '/customer';
-  };
 
   return (
     <header className="app-header">
@@ -42,20 +34,27 @@ export default function Header({ currentRole, onToggleRole, onOpenQuickOrder }) 
       </div>
 
       <div className="header-right">
-        {/* Interactive Role Identifier & Switcher Pill */}
-        <button 
-          type="button"
-          onClick={handleToggleRole}
+        {/* Role Identifier Badge (Static, non-clickable, no internal switching) */}
+        <div 
           className={`user-role-pill ${isTailor ? 'tailor' : 'customer'}`}
-          title={`Click to switch to ${isTailor ? 'Customer Portal' : 'Tailor Atelier OS'}`}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            background: isTailor ? '#fef3c7' : '#e0e7ff',
+            color: isTailor ? '#92400e' : '#3730a3',
+            border: isTailor ? '1px solid #fde68a' : '1px solid #c7d2fe',
+            cursor: 'default',
+            userSelect: 'none'
+          }}
         >
           {isTailor ? <Scissors size={14} /> : <User size={14} />}
           <span>{isTailor ? 'Tailor Atelier OS' : 'Customer Portal'}</span>
-          <span style={{ fontSize: '0.72rem', opacity: 0.8, textDecoration: 'underline', marginLeft: '2px' }}>
-            (Switch to {isTailor ? 'Customer' : 'Tailor'})
-          </span>
-        </button>
+        </div>
 
         {/* Capacity status pill */}
         {isTailor && (
